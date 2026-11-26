@@ -1,0 +1,26 @@
+{% extends "public_site/_layout.html" %}
+{% block public_content %}
+<section class="bg-white border rounded p-4">
+  <h1 class="h3 fw-bold mb-3">Tải biểu mẫu</h1>
+  {% if templates %}
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead><tr><th>Mã</th><th>Tên biểu mẫu</th><th>Phiên bản</th><th>Hiệu lực từ</th><th></th></tr></thead>
+        <tbody>
+          {% for t in templates %}
+            <tr>
+              <td class="text-nowrap">{{ t.code }}</td>
+              <td>{{ t.name }}</td>
+              <td>{{ t.version }}</td>
+              <td class="text-nowrap">{{ t.effective_from|date:"d/m/Y" }}</td>
+              <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'public_site:form_download' t.pk %}">Tải về</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">Hiện chưa có biểu mẫu nào được công bố.</p>
+  {% endif %}
+</section>
+{% endblock %}

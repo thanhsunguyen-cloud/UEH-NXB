@@ -1,0 +1,12 @@
+<article class="card h-100">
+  {% if book.cover_storage_ref %}
+    <img src="{% url 'public_site:image' 'sach-moi' book.pk %}" class="card-img-top pub-cover" alt="Bìa sách: {{ book.title }}" loading="lazy">
+  {% else %}
+    <div class="pub-cover d-flex align-items-center justify-content-center text-muted small p-2 text-center">{{ book.title }}</div>
+  {% endif %}
+  <div class="card-body">
+    <h3 class="h6 card-title pub-text">{{ book.title }}</h3>
+    <div class="small text-muted pub-text">{{ book.authors }} · {{ book.year }}</div>
+    {% if book.isbn %}<div class="small text-muted">ISBN {{ book.isbn }}</div>{% endif %}
+  </div>
+</article>

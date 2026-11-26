@@ -1,0 +1,8 @@
+<form method="post" action="{% url publish_url item.pk %}" class="d-inline">
+  {% csrf_token %}
+  {% if item.is_published %}
+    <button type="submit" name="action" value="unpublish" class="btn btn-sm btn-outline-warning">Gỡ đăng</button>
+  {% else %}
+    <button type="submit" name="action" value="publish" class="btn btn-sm btn-outline-success">Đăng</button>
+  {% endif %}
+</form>
