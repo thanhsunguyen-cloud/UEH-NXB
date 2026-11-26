@@ -50,6 +50,7 @@ docker compose exec web python manage.py seed_demo
 2. Lấy ID của Shared Drive (phần cuối URL `https://drive.google.com/drive/folders/<ID>`) và đặt vào `GDRIVE_SHARED_DRIVE_ID`.
 3. Trên Cloud Run: gắn service account vào dịch vụ và để trống `GDRIVE_CREDENTIALS_FILE`. Khi chạy cục bộ: đặt `GDRIVE_CREDENTIALS_FILE` trỏ tới file JSON của service account (không đưa file này vào repository).
 4. Đặt `FILE_STORAGE_BACKEND=gdrive` rồi khởi động lại ứng dụng.
+5. Kiểm tra cấu hình thật: `python manage.py drive_check` (xem `apps/documents_drive/README.md`).
 
 ## 4. Lệnh thường dùng
 

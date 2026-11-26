@@ -21,3 +21,13 @@ Theo nguyên tắc tài liệu giao việc M0: khi gặp điểm cần làm rõ,
 5. **Kiểm soát vượt mức phải thu khi ghi nhận `Collection`:**
    - *Quyết định:* Hàm `create_collection(..., confirm_overpayment=False)` từ chối nếu tổng đã thu sau khi ghi nhận vượt quá `effective_receivable_amount(receivable)`, trừ khi đồng thời `confirm_overpayment=True` và `note` không rỗng.
    - *Lý do:* Đáp ứng chính xác quy tắc mục 5.14 ("Tổng đã thu không được vượt amount trừ khi có ghi chú và người dùng xác nhận").
+
+# CÂU HỎI & QUYẾT ĐỊNH TRONG GÓI M1 (AI-1)
+
+6. **Đăng ký `apps.documents_drive` vào `INSTALLED_APPS` (`portal/settings/base.py`, file M0):**
+   - *Câu hỏi:* Lệnh `python manage.py drive_check` chỉ chạy được khi app có trong `INSTALLED_APPS`, nhưng danh sách CR-001 không cho sửa dòng này.
+   - *Owner trả lời (26/11/2026):* Thêm trong PR M1 (`m1-drive`). Đã thêm đúng 1 dòng `"apps.documents_drive.apps.DocumentsDriveConfig"`.
+
+7. **Số lần thử lại khi Drive lỗi 429/5xx:**
+   - *Câu hỏi:* Gói ghi "thử lại tối đa 5 lần" nhưng phần test ghi "dừng sau 5 lần".
+   - *Owner trả lời (26/11/2026):* Tổng cộng 5 lần gọi (1 lần đầu + tối đa 4 lần thử lại). Thời gian chờ giữa các lần: 1, 2, 4, 8 giây (hằng `MAX_ATTEMPTS`, `BASE_DELAY_SECONDS` trong `apps/documents_drive/client.py`).

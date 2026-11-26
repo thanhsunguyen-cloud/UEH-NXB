@@ -158,3 +158,84 @@ TOTAL                                   1180    132    89%
 Required test coverage of 85% reached. Total coverage: 88.81%
 ====================== 121 passed, 20 warnings in 45.72s =======================
 ```
+
+---
+
+# BÁO CÁO KIỂM THỬ M1 — TÀI LIỆU & GOOGLE DRIVE (`m1-drive`, kèm CR-001)
+
+## 1. Môi trường chạy thật (26/11/2026)
+
+- **Python** `3.13.18` (CI dùng 3.12); **Django** `5.2.19`; **PostgreSQL** `16.15`
+- **pytest** `9.2.0` (`pytest-django 4.14.0`, `pytest-cov 7.1.0`); **ruff** `0.17.6`
+- **google-api-python-client** `2.202.0`; **google-auth** `2.63.1`
+- Biến môi trường giống `ci.yml` (`FILE_STORAGE_BACKEND=local`, `EMAIL_URL=memorymail://`, `DATABASE_URL=postgres://...@localhost:5432/ueh_portal_test`).
+- Test không gọi Drive thật. Toàn bộ test Drive dùng bản giả lập `tests/drive_fake.py`, mô phỏng Drive API v3 (files.list/create/get/update/delete, alt=media + Range, resumable upload) và ghi lại mọi request.
+- Môi trường tạo mã không chạy được Docker daemon, nên bước `docker-smoke` để CI trên GitHub đảm nhận.
+
+## 2. Đối chiếu yêu cầu test của gói M1 (mục 3.3)
+
+| Yêu cầu | Test |
+|---|---|
+| Upload 3 phần (8 MiB + 8 MiB + phần lẻ): đúng `Content-Range`, file ID, sha256 | `test_three_part_upload_content_range_file_id_and_sha256` |
+| Thử lại khi 503 rồi thành công; dừng sau 5 lần | `test_retry_on_503_then_success`, `test_chunk_retry_resumes_from_drive_received_offset`, `test_execute_stops_after_5_attempts_with_vietnamese_message`, `test_send_stops_after_5_attempts`, `test_chunk_upload_stops_after_5_attempts` |
+| `exists` = `False` khi file trong thùng rác (và khi đã xóa / ra khỏi Shared Drive) | `test_exists_false_for_trashed_moved_deleted_and_logs_missing` |
+| Mọi lời gọi có `supportsAllDrives=True` (kiểm tra trên request đã ghi lại) | `_assert_all_drives()` trong các test upload, thư viện và HTTP |
+| `save_library_file` lên Drive | `test_save_library_file_on_drive`, `test_save_library_file_multi_chunk`, `test_save_library_file_rejections` |
+| View tải xuống trả 404 và ghi `document.missing` khi file mất trên Drive | `test_download_of_file_removed_from_drive_returns_404_and_logs_missing` |
+| View M0: begin → chunk → complete qua HTTP với `LocalFileStorage`; tải xuống không có `Content-Length`; người không có quyền nhận 404/403 | `tests/test_core_views.py` (11 test), `apps/core/views.py` đạt **100%** (trước đó 43%) |
+| Độ phủ `apps/documents_drive` ≥ 85% | **97–100%** cho từng file (bảng bên dưới) |
+
+## 3. Kết quả chạy thật (nguyên văn, rút gọn phần `apps/core` không đổi)
+
+```text
+$ ruff check .
+All checks passed!
+$ ruff format --check .
+79 files already formatted
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+$ python manage.py check
+System check identified no issues (0 silenced).
+$ pytest --cov=apps/core --cov=apps/documents_drive --cov-fail-under=85
+...
+apps/core/storage.py                                        203     13    94%   156, 186, 189, 203, 208, 235-236, 316, 366, 368, 372, 382, 401
+apps/core/views.py                                           69      0   100%
+apps/documents_drive/__init__.py                              0      0   100%
+apps/documents_drive/apps.py                                  6      0   100%
+apps/documents_drive/client.py                              134      2    99%   69-70
+apps/documents_drive/management/__init__.py                   0      0   100%
+apps/documents_drive/management/commands/__init__.py          0      0   100%
+apps/documents_drive/management/commands/drive_check.py      77      2    97%   127, 137
+apps/documents_drive/storage.py                             269      8    97%   194-195, 244, 255, 259, 288, 369, 446
+TOTAL                                                      1720    102    94%
+Required test coverage of 85% reached. Total coverage: 94.07%
+============================= 202 passed in 30.46s =============================
+```
+
+## 4. Hướng dẫn chạy `drive_check` trên Shared Drive thật (dành cho Owner)
+
+1. Thêm service account vào Shared Drive của NXB với vai trò **Content Manager**.
+2. Đặt biến môi trường:
+   ```bash
+   FILE_STORAGE_BACKEND=gdrive
+   GDRIVE_SHARED_DRIVE_ID=<ID Shared Drive>
+   # Cloud Run: để trống để dùng tài khoản dịch vụ gắn với dịch vụ.
+   # Máy cục bộ: trỏ tới file JSON (không đưa vào kho).
+   GDRIVE_CREDENTIALS_FILE=/duong/dan/service-account.json
+   ```
+3. Chạy:
+   ```bash
+   python manage.py drive_check
+   ```
+   Lệnh đọc Shared Drive, tìm/tạo `Portal/_healthcheck/`, tạo một file thử, kiểm tra sha256, kiểm tra file nằm đúng Shared Drive, đọc lại dạng stream, xóa file thử, rồi kiểm tra mọi lời gọi có `supportsAllDrives=true`. Mỗi bước in `[ĐẠT]` hoặc `[LỖI]`. Kết quả mong đợi ở dòng cuối: `drive_check: TẤT CẢ ĐẠT.`. Nếu có bước không đạt, lệnh trả mã thoát ≠ 0. Thêm `--keep-file` nếu muốn giữ file thử để xem trên Drive.
+4. Ví dụ khi chưa cấu hình (chạy thật trong môi trường tạo mã):
+   ```text
+   $ python manage.py drive_check
+   Kiểm tra cấu hình Google Drive cho UEH Publishing Portal
+   - FILE_STORAGE_BACKEND = local
+   - Thông tin xác thực: Application Default Credentials
+   Lưu ý: FILE_STORAGE_BACKEND chưa là 'gdrive', ứng dụng vẫn đang lưu cục bộ.
+   [LỖI] Không khởi tạo được kết nối Google Drive: Chưa cấu hình GDRIVE_SHARED_DRIVE_ID cho FILE_STORAGE_BACKEND=gdrive.
+   CommandError: drive_check: KHÔNG ĐẠT.
+   ```
+5. Nghiệm thu cuối (Owner): bật `FILE_STORAGE_BACKEND=gdrive`, tải lên một file 50 MB qua giao diện, tải xuống, so sánh sha256 với `Document.sha256`.
