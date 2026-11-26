@@ -13,8 +13,8 @@
     <li class="mb-2"><strong>Đăng ký xuất bản và quyết định xuất bản.</strong> Nhà xuất bản thực hiện đăng ký xuất bản và ra quyết định xuất bản cho tác phẩm.</li>
     <li class="mb-2"><strong>Nộp lưu chiểu và hoàn tất.</strong> Sau khi nộp lưu chiểu, hồ sơ được ghi nhận hoàn tất.</li>
   </ol>
-  <p class="small text-muted">Bạn theo dõi trạng thái hồ sơ trong mục “Hồ sơ của tôi” sau khi đăng nhập.
-    Thời gian xử lý từng bước: [CẦN NXB CUNG CẤP: thời gian xử lý dự kiến của từng bước].</p>
+  <p class="small text-muted">Bạn theo dõi trạng thái hồ sơ trong mục “Hồ sơ của tôi” sau khi đăng nhập
+    và được báo qua email khi hồ sơ cần bổ sung hoặc chuyển bước.</p>
 
   <h2 class="h5 fw-bold mt-4">Giấy tờ cần nộp</h2>
   <div class="row g-3 mb-4">
@@ -22,8 +22,8 @@
       <div class="border rounded p-3 h-100">
         <h3 class="h6 fw-bold">Hình thức tự xuất bản</h3>
         <ul class="mb-0">
-          <li>Mẫu 2 — [CẦN NXB CUNG CẤP: tên đầy đủ Mẫu 2]</li>
-          <li>Mẫu 3 — [CẦN NXB CUNG CẤP: tên đầy đủ Mẫu 3]</li>
+          <li>Mẫu 2 — Giấy chấp thuận</li>
+          <li>Mẫu 3 — Đơn đề nghị</li>
           <li>Bản thảo</li>
         </ul>
       </div>
@@ -32,9 +32,9 @@
       <div class="border rounded p-3 h-100">
         <h3 class="h6 fw-bold">Hình thức liên kết</h3>
         <ul class="mb-0">
-          <li>Mẫu 1 — [CẦN NXB CUNG CẤP: tên đầy đủ Mẫu 1]</li>
-          <li>Mẫu 2 — [CẦN NXB CUNG CẤP: tên đầy đủ Mẫu 2]</li>
-          <li>Mẫu 3 — [CẦN NXB CUNG CẤP: tên đầy đủ Mẫu 3]</li>
+          <li>Mẫu 1 — Giấy ủy quyền (khi đơn vị liên kết không phải là tác giả)</li>
+          <li>Mẫu 2 — Giấy chấp thuận</li>
+          <li>Mẫu 3 — Đơn đề nghị</li>
           <li>Bản thảo</li>
         </ul>
       </div>
@@ -45,7 +45,8 @@
   <h2 class="h5 fw-bold mt-4">Yêu cầu định dạng bản thảo</h2>
   <ul class="mb-0">
     <li>Tệp tải lên hệ thống: định dạng {{ allowed_extensions }}; mỗi tệp tối đa {{ max_file_mb }} MB.</li>
-    <li>[CẦN NXB CUNG CẤP: yêu cầu trình bày bản thảo (khổ giấy, phông chữ, cỡ chữ, lề, đánh số trang, hình ảnh, tài liệu tham khảo)]</li>
+    <li>Bản thảo nộp dưới dạng Word (.docx) và PDF.</li>
+    <li>Khổ giấy theo thiết kế của tác giả.</li>
   </ul>
 </article>
 {% endblock %}

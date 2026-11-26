@@ -17,7 +17,7 @@ env = environ.Env(
     MAX_LIBRARY_FILE_MB=(int, 10),
     GDRIVE_SHARED_DRIVE_ID=(str, ""),
     GDRIVE_CREDENTIALS_FILE=(str, ""),
-    DEFAULT_FROM_EMAIL=(str, "nxb@ueh.edu.vn"),
+    DEFAULT_FROM_EMAIL=(str, "nxbkt@ueh.edu.vn"),
 )
 
 env_file = BASE_DIR / ".env"

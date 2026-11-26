@@ -1,12 +1,11 @@
 {% extends "base.html" %}
 {% comment %}
   Khung chung cho trang công khai M6: header thương hiệu, menu công khai, footer liên hệ.
-  Lưu ý: base.html (M0) chưa có block trong <head> nên thẻ meta description được đặt
-  ở đầu block content (xem docs/QUESTIONS.md, mục M6).
+  Thẻ meta description nằm trong block meta của base.html (CR-002).
 {% endcomment %}
 {% block title %}{{ page_title }}{% endblock %}
+{% block meta %}<meta name="description" content="{{ meta_description }}">{% endblock %}
 {% block content %}
-<meta name="description" content="{{ meta_description }}">
 <style>
   .pub-brand { background:#f2f8f9; border-left:4px solid #005F69; }
   .pub-nav .nav-link { color:#005F69; }
@@ -40,10 +39,10 @@
   <section class="border-top mt-5 pt-4 small text-muted" aria-label="Thông tin liên hệ">
     <div class="row g-3">
       <div class="col-12 col-md-6">
-        <div class="fw-semibold text-dark mb-1">Nhà xuất bản Kinh tế TP. Hồ Chí Minh</div>
-        <div>Địa chỉ: [CẦN NXB CUNG CẤP: địa chỉ trụ sở]</div>
-        <div>Điện thoại: [CẦN NXB CUNG CẤP: số điện thoại]</div>
-        <div>Email: [CẦN NXB CUNG CẤP: email liên hệ]</div>
+        <div class="fw-semibold text-dark mb-1">Nhà xuất bản Kinh tế thành phố Hồ Chí Minh</div>
+        <div>Trực thuộc Đại học Kinh tế thành phố Hồ Chí Minh</div>
+        <div>Địa chỉ: 279 Nguyễn Tri Phương, phường Diên Hồng, TP.HCM</div>
+        <div>Email: <a href="mailto:nxbkt@ueh.edu.vn">nxbkt@ueh.edu.vn</a></div>
       </div>
       <div class="col-12 col-md-6 text-md-end">
         <a href="{% url 'public_site:contact' %}">Xem đầy đủ thông tin liên hệ</a>
