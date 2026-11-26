@@ -1,10 +1,10 @@
 # GÓI GIAO VIỆC DEMO – MÀN HÌNH CỔNG KHÁCH HÀNG (M2) VÀ TÁC NGHIỆP (M3)
-UEH Publishing Portal V2 · Đợt 2 · Người làm: **AI-3** · 08/12 – 13/12/2026 · Owner: Nguyễn Thanh Sử
+UEH Publishing Portal V2 · Đợt 2 · Người làm: **AI-4 (Gemini/Jules)** · từ 26/11/2026, khoảng 1 tuần · Owner: Nguyễn Thanh Sử
 
 > Mục đích: cho biên tập viên NXB **bấm thử** các màn hình chính trước khi viết M2, M3 thật (đợt 3), để góp ý sớm. Đây là bản demo dùng dữ liệu giả, sẽ bị gỡ trước go-live. Nhánh `demo-m2-m3`. Chỉ tạo mới `apps/demo/` và `templates/demo/`.
 
 ## 1. Cách làm
-- App mới `apps/demo` (không có model, không migration). URL `/demo/` chỉ hoạt động khi `settings.DEBUG=True` **hoặc** biến môi trường `DEMO_ENABLED=True`; còn lại trả 404. Việc thêm app vào `INSTALLED_APPS` và `include("apps.demo.urls")` vào `portal/urls.py`: ghi vào PR để Owner gộp (thay đổi 2 dòng).
+- App mới `apps/demo` (không có model, không migration). URL `/demo/` chỉ hoạt động khi `settings.DEBUG=True` **hoặc** biến môi trường `DEMO_ENABLED=True`; còn lại trả 404. Được phép sửa đúng 2 dòng ngoài app: thêm `"apps.demo"` vào `INSTALLED_APPS` trong `portal/settings/base.py` và thêm `path("demo/", include("apps.demo.urls"))` vào `portal/urls.py` **trước** dòng `include("apps.public_site.urls")`. Ghi rõ 2 dòng này trong mô tả pull request.
 - Dữ liệu giả viết cứng trong `apps/demo/fake_data.py` (5–8 hồ sơ ở các trạng thái khác nhau, tên sách và tác giả hư cấu). Không đọc/ghi database.
 - Mỗi trang có dải cảnh báo cố định: **"BẢN DEMO – DỮ LIỆU GIẢ – THAO TÁC KHÔNG ĐƯỢC LƯU"**.
 - Kế thừa `base.html`, Bootstrap 5 + HTMX, tiếng Việt, xem tốt trên điện thoại. Nút bấm chuyển trang hoặc mở hộp thoại; không cần xử lý thật.
