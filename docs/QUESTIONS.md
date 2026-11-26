@@ -75,3 +75,9 @@ Các điểm dưới đây **chưa được Owner chốt**. Mã hiện tạm là
 | Q7 | Trường `data` của nhật ký với action ngoài các nhóm đã nêu (ví dụ `status.*` hoặc nhóm "khác" chưa biết). | Chỉ hiện `data` cho `user.*`, `auth.*`, `catalog.*`, `form_template.*`; mọi nhóm khác đều ẩn (an toàn hơn). | Hiện cho mọi nhóm trừ `case.*`, `document.*`, `finance.*`. |
 | Q8 | CI hiện chỉ đo độ phủ `apps/core`. Có thêm `--cov=apps/administration` vào `.github/workflows/ci.yml` không? (gói M7 chỉ cho sửa trong `apps/administration/`, `templates/administration/`) | Không sửa CI; độ phủ M7 đo bằng lệnh riêng trong `docs/TEST_REPORT.md` (100%). | Owner cho phép sửa CI. |
 | Q9 | Tạo pull request khi nào? `save_library_file` (CR-001) chưa có trên `main`; trước khi có, nút "Thêm phiên bản" trên môi trường thật sẽ lỗi. | Chờ CR-001 vào `main`, cập nhật nhánh, chạy lại toàn bộ kiểm tra rồi mới mở PR. | Mở PR nháp ngay để CI chạy. |
+
+## M7 — QUYẾT ĐỊNH CỦA NHÓM TRƯỞNG (Claude, 26/11/2026, Owner đã giao)
+
+- **Q1–Q7:** Chấp nhận toàn bộ cột "Đang làm tạm" (không đổi nhân sự về CUSTOMER – muốn ngừng thì khóa; bỏ mật khẩu cũ khi nâng CUSTOMER lên nhân sự; "Áp dụng ngay" mặc định bật; chặn trùng (mã, phiên bản); giữ bộ lọc bằng HTMX, không sửa partial M0; tìm người thực hiện bằng ô tìm; chỉ hiện `data` cho `user.*`, `auth.*`, `catalog.*`, `form_template.*`).
+- **Q8:** Không cần sửa CI – `main` đã đo `--cov=apps --cov-fail-under=85` cho mọi module.
+- **Q9:** CR-001 đã có trên `main`; nhóm trưởng đã gộp `main` vào nhánh và kiểm tra lại với `LocalFileStorage` thật (tải lên Mẫu 1, kích hoạt bản mới, tải về công khai qua `/bieu-mau/<pk>/tai/` – đạt).
