@@ -44,10 +44,19 @@ def test_titles_and_descriptions_are_unique(client):
     assert len(descriptions) == len(STATIC_PAGES)
 
 
-def test_contact_and_about_use_placeholders_not_invented_data(client):
-    for url_name in ("public_site:contact", "public_site:about"):
+def test_public_pages_show_official_nxb_content_without_placeholders(client):
+    """Nội dung lấy từ phiếu NXB ngày 26/11/2026; không còn chỗ trống, không công bố điện thoại."""
+    for url_name in STATIC_PAGES:
         html = client.get(reverse(url_name)).content.decode()
-        assert "[CẦN NXB CUNG CẤP:" in html
+        assert "[CẦN NXB CUNG CẤP" not in html
+        assert "Điện thoại" not in html
+    contact = client.get(reverse("public_site:contact")).content.decode()
+    assert "279 Nguyễn Tri Phương" in contact
+    assert "nxbkt@ueh.edu.vn" in contact
+    about = client.get(reverse("public_site:about")).content.decode()
+    assert "444/GP-BTTTT" in about
+    head = client.get(reverse("public_site:home")).content.decode().split("</head>")[0]
+    assert '<meta name="description"' in head
 
 
 def test_public_pages_do_not_show_case_data(client):

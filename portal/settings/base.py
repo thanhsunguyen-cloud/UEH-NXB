@@ -14,7 +14,7 @@ env = environ.Env(
     BOOTSTRAP_ADMIN_EMAILS=(list, []),
     FILE_STORAGE_BACKEND=(str, "local"),
     MAX_FILE_MB=(int, 200),
-    DEFAULT_FROM_EMAIL=(str, "nxb@ueh.edu.vn"),
+    DEFAULT_FROM_EMAIL=(str, "nxbkt@ueh.edu.vn"),
 )
 
 env_file = BASE_DIR / ".env"

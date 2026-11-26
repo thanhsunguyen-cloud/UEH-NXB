@@ -46,3 +46,13 @@ Các điểm dưới đây **chưa được tự quyết**. Mỗi mục ghi các
 14. **Phân trang `/sach-moi/`** — gói việc không nói; *tạm* 12 sách/trang. Trang quản lý: 20 mục/trang.
 15. **Footer của `base.html`** — trên trang công khai vẫn hiện "UEH Publishing Portal V2 · Nền tảng M0" (file M0). Có muốn đổi chữ này không?
 16. **Nội dung trang Quy trình** — các bước được viết dựa trên các trạng thái hồ sơ đã có trong M0 (`CaseStatus`). Danh sách giấy tờ lấy đúng theo gói việc. Tên đầy đủ của Mẫu 1/2/3, thời gian xử lý và yêu cầu trình bày bản thảo đang để `[CẦN NXB CUNG CẤP]`. Owner/NXB xem lại câu chữ các bước.
+
+## M6 — QUYẾT ĐỊNH CỦA NHÓM TRƯỞNG (Claude, 26/11/2026, Owner đã giao)
+
+- Mục 1, 2, 15 (meta description, link menu, chân trang): đã làm trong CR-002 — thêm `{% block meta %}` vào `<head>` của `base.html`, link "Tin tức & sách mới" cho EDITOR trong `nav.html`, chân trang "© 2026 Nhà xuất bản Kinh tế TP. Hồ Chí Minh".
+- Mục 3, 4, 7, 8, 9, 11, 12, 13, 14: chấp nhận cách AI-3 đã làm.
+- Mục 5: CI đo độ phủ toàn bộ `apps` (`--cov=apps --cov-fail-under=85`).
+- Mục 6: CR-001 đã gộp; ảnh bìa lưu qua `save_library_file` thật (đã kiểm tra đầu-cuối).
+- Mục 10: chưa cần xem trước ảnh của mục chưa đăng (để giai đoạn 2 nếu biên tập viên yêu cầu).
+- Mục 16 và toàn bộ `[CẦN NXB CUNG CẤP]`: đã điền theo phiếu NXB ngày 26/11/2026 (xem `docs/M6_NOI_DUNG_CAN_BO_SUNG.md`).
+- Email gửi thư tự động mặc định: `nxbkt@ueh.edu.vn` (mục 7 của phiếu).
