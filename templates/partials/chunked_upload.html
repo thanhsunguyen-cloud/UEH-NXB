@@ -1,0 +1,137 @@
+{# Partial tải tài liệu chia phần 8 MiB dùng chung cho M1–M8 (không dùng thư viện JS ngoài) #}
+<div class="ueh-chunked-upload border rounded p-3 bg-white"
+     data-case-id="{{ case.id }}"
+     data-doc-type="{{ doc_type }}"
+     data-form-code="{{ form_code|default:'' }}"
+     data-begin-url="{% url 'core:upload_begin' %}">
+  <div class="mb-2">
+    <label class="form-label fw-semibold">{{ label|default:"Chọn tài liệu tải lên" }}</label>
+    <input type="file" class="form-control ueh-file-input"
+           accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.png">
+    <div class="form-text">Chấp nhận: .pdf, .doc, .docx, .xls, .xlsx, .jpg, .png (tối đa 200 MiB, tự động chia phần 8 MiB).</div>
+  </div>
+  <div class="progress d-none mb-2" style="height:8px;">
+    <div class="progress-bar" role="progressbar" style="width:0%"></div>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <button type="button" class="btn btn-sm btn-primary ueh-upload-btn">Tải lên</button>
+    <span class="small text-muted ueh-upload-status"></span>
+  </div>
+</div>
+
+<script>
+(function () {
+  if (window.__uehChunkedUploadBound) return;
+  window.__uehChunkedUploadBound = true;
+
+  const CHUNK_SIZE = 8 * 1024 * 1024;
+  const MAX_RETRIES = 3;
+
+  function getCsrfToken() {
+    const match = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : "";
+  }
+
+  async function sendChunkWithRetry(url, offset, blob) {
+    let attempt = 0;
+    while (attempt < MAX_RETRIES) {
+      attempt += 1;
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": getCsrfToken(),
+            "X-Upload-Offset": String(offset),
+            "Content-Type": "application/octet-stream",
+          },
+          body: blob,
+        });
+        if (!res.ok) {
+          const payload = await res.json().catch(() => ({}));
+          if (res.status >= 400 && res.status < 500) {
+            throw new Error(payload.error || "Yêu cầu tải lên bị từ chối.");
+          }
+          throw new Error(payload.error || "Lỗi máy chủ khi gửi phần tệp.");
+        }
+        return await res.json();
+      } catch (err) {
+        if (attempt >= MAX_RETRIES) throw err;
+        await new Promise((r) => setTimeout(r, 500 * attempt));
+      }
+    }
+  }
+
+  document.addEventListener("click", async function (ev) {
+    const btn = ev.target.closest(".ueh-upload-btn");
+    if (!btn) return;
+    const root = btn.closest(".ueh-chunked-upload");
+    const input = root.querySelector(".ueh-file-input");
+    const progressWrap = root.querySelector(".progress");
+    const progressBar = root.querySelector(".progress-bar");
+    const statusEl = root.querySelector(".ueh-upload-status");
+    const file = input.files && input.files[0];
+    if (!file) {
+      statusEl.textContent = "Vui lòng chọn một tệp trước khi tải lên.";
+      return;
+    }
+
+    btn.disabled = true;
+    progressWrap.classList.remove("d-none");
+    progressBar.style.width = "0%";
+    statusEl.textContent = "Đang khởi tạo phiên tải lên...";
+
+    try {
+      const beginRes = await fetch(root.dataset.beginUrl, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          case_id: root.dataset.caseId,
+          doc_type: root.dataset.docType,
+          form_code: root.dataset.formCode || "",
+          filename: file.name,
+          total_size: file.size,
+          mime_type: file.type || "application/octet-stream",
+        }),
+      });
+      const beginData = await beginRes.json();
+      if (!beginRes.ok) throw new Error(beginData.error || "Không thể khởi tạo phiên tải lên.");
+
+      const sessionId = beginData.session_id;
+      const chunkSize = beginData.chunk_size || CHUNK_SIZE;
+      let offset = 0;
+
+      while (offset < file.size) {
+        const end = Math.min(offset + chunkSize, file.size);
+        const slice = file.slice(offset, end);
+        await sendChunkWithRetry(`/documents/uploads/${sessionId}/chunk/`, offset, slice);
+        offset = end;
+        const pct = Math.round((offset / file.size) * 100);
+        progressBar.style.width = `${pct}%`;
+        statusEl.textContent = `Đang tải lên: ${pct}%`;
+      }
+
+      statusEl.textContent = "Đang hoàn tất và kiểm tra SHA-256...";
+      const completeRes = await fetch(`/documents/uploads/${sessionId}/complete/`, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": getCsrfToken(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ note: "" }),
+      });
+      const completeData = await completeRes.json();
+      if (!completeRes.ok) throw new Error(completeData.error || "Không thể hoàn tất tải lên.");
+
+      statusEl.textContent = `Hoàn tất phiên bản v${completeData.version}.`;
+      root.dispatchEvent(new CustomEvent("ueh:upload-complete", { bubbles: true, detail: completeData }));
+    } catch (err) {
+      statusEl.textContent = err.message || "Tải lên thất bại.";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>

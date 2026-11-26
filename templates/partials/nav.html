@@ -1,0 +1,30 @@
+{% if user.is_authenticated %}
+<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+  {% if user.is_customer %}
+    <li class="nav-item"><a class="nav-link" href="{% url 'customer:home' %}">Hồ sơ của tôi</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'customer:case_create' %}">Tạo hồ sơ mới</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'customer:profile' %}">Tài khoản</a></li>
+  {% elif user.is_editor %}
+    <li class="nav-item"><a class="nav-link" href="{% url 'backoffice:home' %}">Danh sách hồ sơ</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'backoffice:queue' %}">Hồ sơ cần xử lý</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'reports:search' %}">Tra cứu</a></li>
+    <li class="nav-item dropdown">
+      <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">Thống kê</a>
+      <ul class="dropdown-menu">
+        {% if nav_can_view_publication_stats %}
+          <li><a class="dropdown-item" href="{% url 'reports:catalog_stats' %}">Danh mục xuất bản</a></li>
+        {% endif %}
+        {% if nav_can_view_finance %}
+          <li><a class="dropdown-item" href="{% url 'finance:overview' %}">Tài chính</a></li>
+          <li><a class="dropdown-item" href="{% url 'finance:debt' %}">Công nợ</a></li>
+        {% endif %}
+      </ul>
+    </li>
+  {% elif user.is_admin_role %}
+    <li class="nav-item"><a class="nav-link" href="{% url 'administration:home' %}">Người dùng</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'administration:catalogs' %}">Danh mục</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'administration:templates' %}">Biểu mẫu</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'administration:audit_logs' %}">Nhật ký hệ thống</a></li>
+  {% endif %}
+</ul>
+{% endif %}

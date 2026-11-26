@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập{% endblock %}
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-6 col-lg-5">
+    <div class="card border">
+      <div class="card-body p-4">
+        <h1 class="h4 fw-bold mb-1">Đăng nhập hệ thống</h1>
+        <p class="text-muted small mb-4">Cổng thông tin xuất bản — Nhà xuất bản Kinh tế TP.HCM</p>
+
+        <div class="mb-4 pb-3 border-bottom">
+          <div class="fw-semibold small mb-2">Dành cho nhân sự NXB (@ueh.edu.vn)</div>
+          <a href="/accounts/google/login/" class="btn btn-outline-dark w-100">
+            Đăng nhập bằng Google (@ueh.edu.vn)
+          </a>
+          <div class="form-text">Biên tập viên và Quản trị viên bắt buộc đăng nhập qua Google UEH.</div>
+        </div>
+
+        <form method="post" action="{% url 'accounts:login' %}">
+          {% csrf_token %}
+          <div class="fw-semibold small mb-2">Dành cho khách hàng (Tác giả / Đối tác)</div>
+          <div class="mb-3">
+            <label for="id_email" class="form-label small">Email</label>
+            <input type="email" name="email" id="id_email" value="{{ email|default:'' }}" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="id_password" class="form-label small">Mật khẩu</label>
+            <input type="password" name="password" id="id_password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100" style="background-color:#005F69;border-color:#005F69;">
+            Đăng nhập bằng Email
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

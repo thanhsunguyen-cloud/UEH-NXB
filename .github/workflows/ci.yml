@@ -1,0 +1,107 @@
+name: CI — UEH Publishing Portal
+
+on:
+  pull_request:
+    branches: ["main", "develop"]
+  push:
+    branches: ["main"]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ueh_portal_test
+          POSTGRES_USER: ueh_portal
+          POSTGRES_PASSWORD: ueh_portal_ci_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Check migrations match models
+        env:
+          DJANGO_SETTINGS_MODULE: portal.settings.dev
+          DJANGO_SECRET_KEY: ci-test-secret-key
+          DJANGO_DEBUG: "True"
+          DATABASE_URL: postgres://ueh_portal:ueh_portal_ci_password@localhost:5432/ueh_portal_test
+          ALLOWED_HOSTS: localhost,127.0.0.1
+          FILE_STORAGE_BACKEND: local
+          MEDIA_ROOT: /tmp/ueh-portal-ci-media
+          EMAIL_URL: memorymail://
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Run pytest with PostgreSQL
+        env:
+          DJANGO_SETTINGS_MODULE: portal.settings.dev
+          DJANGO_SECRET_KEY: ci-test-secret-key
+          DJANGO_DEBUG: "True"
+          DATABASE_URL: postgres://ueh_portal:ueh_portal_ci_password@localhost:5432/ueh_portal_test
+          ALLOWED_HOSTS: localhost,127.0.0.1
+          FILE_STORAGE_BACKEND: local
+          MEDIA_ROOT: /tmp/ueh-portal-ci-media
+          EMAIL_URL: memorymail://
+        run: pytest --cov=apps/core --cov-fail-under=85
+
+  docker-smoke:
+    # Dựng Docker và mở thử Portal – thay cho việc Owner tự chạy docker compose trên máy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start containers
+        run: docker compose up -d --build
+
+      - name: Wait for the web app
+        run: |
+          for i in $(seq 1 36); do
+            if curl -fsS -o /dev/null http://localhost:8000/tai-khoan/dang-nhap/; then
+              echo "Portal đã khởi động"; exit 0
+            fi
+            sleep 5
+          done
+          echo "Portal không khởi động được sau 3 phút"; exit 1
+
+      - name: Check key pages
+        run: |
+          curl -fsS -o /dev/null http://localhost:8000/
+          code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/khach-hang/)
+          echo "/khach-hang/ -> $code (mong đợi 302 chuyển tới đăng nhập)"
+          test "$code" = "302"
+
+      - name: Load demo data inside the container
+        run: docker compose exec -T web python manage.py seed_demo
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop containers
+        if: always()
+        run: docker compose down -v

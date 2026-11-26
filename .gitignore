@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Django
+staticfiles/
+media/
+*.sqlite3
+
+# Bí mật và cấu hình máy cá nhân – KHÔNG đưa lên GitHub
+.env
+*.pem
+*service-account*.json
+credentials*.json
+
+# Hệ điều hành / trình soạn thảo
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,160 @@
+# BÁO CÁO KIỂM THỬ M0 — SỬA LẦN 1 (`m0-fix-1`)
+
+## 1. Môi trường thực thi thực tế
+
+- **Python**: `3.12.16`
+- **Django**: `5.2.19`
+- **django-allauth**: `65.22.1`
+- **PostgreSQL**: `PostgreSQL 15.20 (Debian 15.20-0+deb12u1) on x86_64-pc-linux-gnu`
+- **pytest**: `9.2.0` (`pytest-django 4.14.0`, `pytest-cov 7.1.0`)
+- **ruff**: `0.17.6`
+- **Lưu ý về Docker**: Môi trường chạy của phiên tạo mã không có Docker daemon để gọi `docker compose up -d --build`, nên toàn bộ các lệnh nghiệm thu đã được chạy **trực tiếp trên PostgreSQL thật** với cùng biến môi trường của `ci.yml` (`DATABASE_URL=postgres://ueh_portal:ueh_portal@127.0.0.1:5432/ueh_portal`, `EMAIL_URL=memorymail://`).
+
+## 2. Tóm tắt các mục đã khắc phục (S1–S6 & Mục 3)
+
+| Hạng mục | Trạng thái | Ghi chú kiểm chứng |
+|---|---|---|
+| **S1** Chặn mật khẩu cho `EDITOR` & `ADMIN` | Đạt | `CustomerPasswordBackend` ném `PermissionDenied` để dừng chuỗi backend; thêm `PortalAllauthBackend` phòng thủ lớp 2; đã test `authenticate()`, `/tai-khoan/dang-nhap/`, `/django-admin/login/` cho cả `EDITOR` và `ADMIN`, và test đăng nhập Google `@ueh.edu.vn`. |
+| **S2** CI `EMAIL_URL` & `ruff` | Đạt | Đổi `EMAIL_URL` sang `memorymail://` trong `.github/workflows/ci.yml`; thêm `[tool.setuptools.packages.find]` trong `pyproject.toml`; `ruff check .` (0 lỗi) và `ruff format --check .` (73/73 tệp đạt). |
+| **S3** Migration khớp model | Đạt | Xóa migration viết tay, tạo lại bằng `python manage.py makemigrations` trên PostgreSQL; thêm bước `makemigrations --check --dry-run` vào CI trước `pytest`. |
+| **S4** Stream download tệp > 32 MiB | Đạt | Bỏ header `Content-Length` cố định trong `DocumentDownloadView`; thêm test tải tệp 40 MiB kiểm tra không có `Content-Length`. |
+| **S5** Chặn xóa/sửa hàng loạt (`QuerySet`) | Đạt | Thêm `NoDeleteQuerySet`/`NoDeleteManager` (`Document`, `Receivable`, `Collection`) và `AppendOnlyQuerySet`/`AppendOnlyManager` (`AuditEvent`, `StatusHistory`); đã test `.objects.filter(...).delete()` cho cả 5 model và `.update()` cho `AuditEvent`, `StatusHistory`. |
+| **S6** Báo cáo kết quả chạy thật | Đạt | Dán nguyên văn kết quả chạy thật ở Mục 3 bên dưới. |
+| **Mục 3** Cải thiện bổ sung | Đạt | Đổi sang `ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]`; tạo `static/.gitkeep` (hết cảnh báo `staticfiles.W004`); thêm `skip_postgeneration_save = True` vào `UserFactory.Meta`; tách test bảng 7.2 theo từng dòng với `@pytest.mark.parametrize`; nâng độ phủ `apps/core/permissions.py` lên **99%**. |
+
+## 3. Kết quả chạy thực tế (nguyên văn)
+
+### 3.1. `python manage.py check`
+
+```text
+$ python manage.py check
+System check identified no issues (0 silenced).
+```
+
+### 3.2. `python manage.py makemigrations --check --dry-run`
+
+```text
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+```
+
+### 3.3. `ruff check .`
+
+```text
+$ ruff check .
+All checks passed!
+```
+
+### 3.4. `ruff format --check .`
+
+```text
+$ ruff format --check .
+73 files already formatted
+```
+
+### 3.5. `python manage.py migrate --noinput` & `python manage.py seed_demo`
+
+```text
+$ python manage.py migrate --noinput
+Operations to perform:
+  Apply all migrations: account, accounts, admin, auth, contenttypes, core, sessions, sites, socialaccount
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying accounts.0001_initial... OK
+  Applying account.0001_initial... OK
+  Applying account.0002_email_max_length... OK
+  Applying account.0003_alter_emailaddress_create_unique_verified_email... OK
+  Applying account.0004_alter_emailaddress_drop_unique_email... OK
+  Applying account.0005_emailaddress_idx_upper_email... OK
+  Applying account.0006_emailaddress_lower... OK
+  Applying account.0007_emailaddress_idx_email... OK
+  Applying account.0008_emailaddress_unique_primary_email_fixup... OK
+  Applying account.0009_emailaddress_unique_primary_email... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying core.0001_initial... OK
+  Applying sessions.0001_initial... OK
+  Applying sites.0001_initial... OK
+  Applying sites.0002_alter_domain_unique... OK
+  Applying socialaccount.0001_initial... OK
+  Applying socialaccount.0002_token_max_lengths... OK
+  Applying socialaccount.0003_extra_data_default_dict... OK
+  Applying socialaccount.0004_app_provider_id_settings... OK
+  Applying socialaccount.0005_socialtoken_nullable_app... OK
+  Applying socialaccount.0006_alter_socialaccount_extra_data... OK
+
+$ python manage.py seed_demo
+Đã khởi tạo xong dữ liệu mẫu M0 (1 admin, 2 editor, 2 customer, 5 hồ sơ, 4 khoản phải thu).
+```
+
+### 3.6. `pytest --cov=apps/core --cov-fail-under=85`
+
+```text
+$ pytest --cov=apps/core --cov-fail-under=85
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+django: version: 5.2.19, settings: portal.settings.dev (from env)
+rootdir: /app/applet/ueh-portal
+configfile: pyproject.toml
+plugins: django-4.14.0, Faker-40.63.0, cov-7.1.0
+collected 121 items
+
+tests/test_audit_and_review.py ...                                       [  2%]
+tests/test_auth.py .................                                     [ 16%]
+tests/test_finance.py ..                                                 [ 18%]
+tests/test_permissions.py .............................................. [ 56%]
+.......................                                                  [ 75%]
+tests/test_storage.py ....                                               [ 78%]
+tests/test_workflow.py .................                                 [ 92%]
+tests/test_codes.py .........                                            [100%]
+
+=============================== warnings summary ===============================
+tests/test_auth.py: 15 warnings
+tests/test_finance.py: 1 warning
+tests/test_permissions.py: 2 warnings
+tests/test_storage.py: 2 warnings
+  /tmp/ueh-venv/lib/python3.12/site-packages/django/core/handlers/base.py:61: UserWarning: No directory at: /app/applet/ueh-portal/staticfiles/
+    mw_instance = middleware(adapted_handler)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.16-final-0 _______________
+
+Name                                   Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------
+apps/core/__init__.py                      0      0   100%
+apps/core/admin.py                        47      4    91%   33, 36, 39, 46
+apps/core/apps.py                          6      0   100%
+apps/core/audit.py                        14      1    93%   14
+apps/core/codes.py                        54      4    93%   37, 40, 50, 53
+apps/core/context_processors.py            4      0   100%
+apps/core/finance.py                      79      2    97%   119, 176
+apps/core/migrations/0001_initial.py      10      0   100%
+apps/core/migrations/__init__.py           0      0   100%
+apps/core/mixins.py                       60     11    82%   43, 52-54, 66, 70, 72, 94, 103-105
+apps/core/models.py                      413     35    92%   79, 95, 111, 234, 255, 262, 265-268, 313, 378, 432, 444, 449, 493, 531, 562, 596, 616, 653, 718, 722, 730, 733, 737, 739, 790, 798, 800-803, 805, 862
+apps/core/permissions.py                  82      1    99%   160
+apps/core/signals.py                       2      0   100%
+apps/core/storage.py                     167     16    90%   119, 149, 152, 166, 171, 198-199, 216, 232, 282, 284, 286, 288, 298, 317, 319
+apps/core/urls.py                          4      0   100%
+apps/core/views.py                        69     39    43%   36, 63-86, 100-115, 122-142
+apps/core/workflow.py                    169     19    89%   104, 123-124, 257, 318-342, 357, 359, 361
+--------------------------------------------------------------------
+TOTAL                                   1180    132    89%
+Required test coverage of 85% reached. Total coverage: 88.81%
+====================== 121 passed, 20 warnings in 45.72s =======================
+```
