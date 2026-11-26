@@ -14,6 +14,9 @@ env = environ.Env(
     BOOTSTRAP_ADMIN_EMAILS=(list, []),
     FILE_STORAGE_BACKEND=(str, "local"),
     MAX_FILE_MB=(int, 200),
+    MAX_LIBRARY_FILE_MB=(int, 10),
+    GDRIVE_SHARED_DRIVE_ID=(str, ""),
+    GDRIVE_CREDENTIALS_FILE=(str, ""),
     DEFAULT_FROM_EMAIL=(str, "nxbkt@ueh.edu.vn"),
 )
 
@@ -128,6 +131,11 @@ STORAGES = {
 MEDIA_ROOT = Path(env("MEDIA_ROOT", default=str(BASE_DIR / "media")))
 FILE_STORAGE_BACKEND = env("FILE_STORAGE_BACKEND")
 MAX_FILE_MB = env("MAX_FILE_MB")
+# CR-001: file nhỏ không thuộc hồ sơ (biểu mẫu, ảnh công khai) lưu qua save_library_file()
+MAX_LIBRARY_FILE_MB = env("MAX_LIBRARY_FILE_MB")
+# CR-001: Google Drive (M1). Rỗng GDRIVE_CREDENTIALS_FILE = dùng Application Default Credentials
+GDRIVE_SHARED_DRIVE_ID = env("GDRIVE_SHARED_DRIVE_ID")
+GDRIVE_CREDENTIALS_FILE = env("GDRIVE_CREDENTIALS_FILE")
 UPLOAD_CHUNK_SIZE_BYTES = 8 * 1024 * 1024  # 8 MiB (bội số của 256 KiB)
 DATA_UPLOAD_MAX_MEMORY_SIZE = (
     12 * 1024 * 1024
