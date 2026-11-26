@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Quản trị — Nhật ký hệ thống{% endblock %}
+{% block content %}
+{% include "administration/_subnav.html" with active="audit" %}
+<h1 class="h4 mb-3">Nhật ký hệ thống</h1>
+<form id="audit-filter" method="get" action="{% url 'administration:audit_logs' %}" class="row g-2 mb-3"
+      hx-get="{% url 'administration:audit_logs' %}" hx-target="#audit-results" hx-swap="innerHTML"
+      hx-trigger="input changed delay:400ms, change, submit">
+  <div class="col-6 col-md-2"><label class="form-label small mb-0" for="id_date_from">Từ ngày</label>{{ filter_form.date_from }}</div>
+  <div class="col-6 col-md-2"><label class="form-label small mb-0" for="id_date_to">Đến ngày</label>{{ filter_form.date_to }}</div>
+  <div class="col-12 col-md-4"><label class="form-label small mb-0" for="id_actor">Người thực hiện</label>{{ filter_form.actor }}</div>
+  <div class="col-8 col-md-3"><label class="form-label small mb-0" for="id_group">Nhóm thao tác</label>{{ filter_form.group }}</div>
+  <div class="col-4 col-md-1 d-grid align-self-end"><button type="submit" class="btn btn-outline-secondary">Lọc</button></div>
+</form>
+<div id="audit-results">
+  {% include "administration/_audit_table.html" %}
+</div>
+<p class="small text-muted mt-2">Nhật ký chỉ đọc. Với thao tác hồ sơ, tài liệu, tài chính chỉ hiện mã hồ sơ và loại thao tác, không hiện nội dung.</p>
+{% endblock %}
