@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # Module nội bộ (M0 sở hữu accounts + core)
     "apps.accounts.apps.AccountsConfig",
     "apps.core.apps.CoreConfig",
+    "apps.documents_drive.apps.DocumentsDriveConfig",
     "apps.customer.apps.CustomerConfig",
     "apps.backoffice.apps.BackofficeConfig",
     "apps.reports.apps.ReportsConfig",
