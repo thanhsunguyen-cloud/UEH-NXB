@@ -41,6 +41,9 @@ STREAM_READ_SIZE = 256 * 1024
 
 ALLOWED_EXTENSIONS = {".pdf", ".doc", ".docx", ".xls", ".xlsx", ".jpg", ".png"}
 
+# CR-001: nhóm file nhỏ không thuộc hồ sơ (biểu mẫu của M7, ảnh công khai của M6)
+LIBRARY_CATEGORIES = ("form_templates", "public_media")
+
 
 @dataclass(frozen=True)
 class StoredFile:
@@ -83,6 +86,40 @@ class FileStorage(Protocol):
     def exists(self, storage_ref: str) -> bool:
         """Kiểm tra tệp có tồn tại trong kho lưu trữ hay không."""
         ...
+
+    def save_library_file(
+        self,
+        category: str,
+        filename: str,
+        fileobj,
+        size: int,
+        mime_type: str,
+    ) -> StoredFile:
+        """Lưu file nhỏ không thuộc hồ sơ vào library/<category>/<uuid>_<tên an toàn> (CR-001).
+
+        `category` chỉ nhận "form_templates" hoặc "public_media"; từ chối file lớn hơn
+        MAX_LIBRARY_FILE_MB.
+        """
+        ...
+
+
+def validate_library_file(category: str, size: int) -> None:
+    """Kiểm tra category và dung lượng khai báo của file thư viện (dùng chung cho mọi backend)."""
+    if category not in LIBRARY_CATEGORIES:
+        raise ValidationError(
+            _("Nhóm lưu trữ '%(category)s' không hợp lệ.") % {"category": category}
+        )
+    if int(size) <= 0:
+        raise ValidationError(_("Dung lượng tệp phải lớn hơn 0 bytes."))
+    if int(size) > library_max_bytes():
+        raise ValidationError(
+            _("Tệp vượt quá dung lượng tối đa %(max_mb)s MiB.")
+            % {"max_mb": int(getattr(settings, "MAX_LIBRARY_FILE_MB", 10))}
+        )
+
+
+def library_max_bytes() -> int:
+    return int(getattr(settings, "MAX_LIBRARY_FILE_MB", 10)) * 1024 * 1024
 
 
 def sanitize_filename(filename: str) -> str:
@@ -207,14 +244,61 @@ class LocalFileStorage:
     def exists(self, storage_ref: str) -> bool:
         return self._resolve_safe_ref(storage_ref).is_file()
 
+    def save_library_file(
+        self,
+        category: str,
+        filename: str,
+        fileobj,
+        size: int,
+        mime_type: str,
+    ) -> StoredFile:
+        validate_library_file(category, size)
+        rel_path = Path("library") / category / f"{uuid.uuid4().hex}_{sanitize_filename(filename)}"
+        dest = self._resolve_safe_ref(rel_path.as_posix())
+        dest.parent.mkdir(parents=True, exist_ok=True)
+
+        max_bytes = library_max_bytes()
+        digest = hashlib.sha256()
+        written = 0
+        try:
+            with dest.open("wb") as fh:
+                while block := fileobj.read(STREAM_READ_SIZE):
+                    written += len(block)
+                    if written > max_bytes or written > int(size):
+                        raise ValidationError(
+                            _("Dung lượng tệp thực tế lớn hơn dung lượng khai báo.")
+                        )
+                    digest.update(block)
+                    fh.write(block)
+            if written != int(size):
+                raise ValidationError(
+                    _("Thiếu dữ liệu tải lên: đã nhận %(got)s / %(expected)s bytes.")
+                    % {"got": written, "expected": int(size)}
+                )
+        except BaseException:
+            dest.unlink(missing_ok=True)
+            raise
+
+        return StoredFile(
+            storage_ref=rel_path.as_posix(),
+            size=written,
+            mime=mime_type or "application/octet-stream",
+            sha256=digest.hexdigest(),
+        )
+
 
 def get_storage() -> FileStorage:
     """Trả về backend lưu trữ theo cấu hình FILE_STORAGE_BACKEND."""
     backend = getattr(settings, "FILE_STORAGE_BACKEND", "local")
     if backend == "local":
         return LocalFileStorage()
+    if backend == "gdrive":
+        # Import bên trong hàm để tránh vòng import (apps.documents_drive dùng apps.core.storage)
+        from apps.documents_drive.storage import GoogleDriveStorage
+
+        return GoogleDriveStorage()
     raise NotImplementedError(
-        f"Backend lưu trữ '{backend}' chưa được cài trong M0 (Google Drive thuộc gói M1)."
+        f"Backend lưu trữ '{backend}' không được hỗ trợ (chỉ nhận 'local' hoặc 'gdrive')."
     )
 
 
