@@ -216,9 +216,103 @@ Thêm: không lộ dữ liệu hồ sơ (`test_public_pages_do_not_show_case_dat
 
 ## 3. Kết quả chạy thật (nguyên văn)
 
+
+---
+
+# BÁO CÁO KIỂM THỬ M7 — QUẢN TRỊ HỆ THỐNG (`m7-admin`)
+
+## 1. Môi trường chạy
+
+- Python 3.13.18, Django 5.2.19, PostgreSQL 16.15, pytest 9.2.0, ruff 0.17.6.
+- Chạy trực tiếp trên PostgreSQL thật với đúng biến môi trường của `.github/workflows/ci.yml` (container của phiên làm việc không có Docker daemon; bước `docker-smoke` do CI trên GitHub chạy).
+- Lưu file biểu mẫu: test dùng **bản giả** `save_library_file` (lớp `FakeLibraryStorage` trong `tests/test_administration.py`) vì CR-001 chưa vào `main`. Sẽ chạy lại với bản thật sau khi CR-001 được gộp.
+
+## 2. Phạm vi test (`tests/test_administration.py`, 42 test)
+
+| Yêu cầu mục 4 của gói M7 | Test |
+|---|---|
+| Mọi URL M7: CUSTOMER, EDITOR nhận 404; chưa đăng nhập chuyển tới đăng nhập | `test_non_admin_gets_404_on_every_m7_url`, `test_anonymous_is_redirected_to_login_on_every_m7_url`, `test_locked_admin_is_treated_as_logged_out` |
+| Tạo nhân sự email ngoài domain UEH bị từ chối | `test_create_staff_outside_ueh_domain_is_rejected` |
+| Không làm số Admin hoạt động < 2; không tự khóa mình | `test_active_admins_never_drop_below_two`, `test_cannot_lock_or_demote_self` |
+| Đổi vai trò, quyền tài chính, khóa/mở ghi đúng `AuditEvent` | `test_role_finance_lock_unlock_write_correct_audit_events`, `test_create_editor_with_finance_access_logs_event` |
+| Danh mục: không có đường xóa; tắt mục đang dùng được | `test_catalog_in_use_can_be_disabled_and_is_never_deleted`, `test_no_delete_route_for_users_or_catalogs`, `test_catalog_create_update_toggle` |
+| Biểu mẫu: kích hoạt bản mới tự tắt bản cũ; từ chối sai định dạng/quá dung lượng | `test_activating_new_version_deactivates_old_same_code`, `test_template_rejects_wrong_extension`, `test_template_rejects_file_over_limit` |
+| Nhật ký: `case.*` không lộ `data` trong HTML | `test_audit_log_hides_data_of_case_document_finance` (kèm `document.*`, `finance.*`, nhóm khác) |
+| Độ phủ `apps/administration` ≥ 85% | **100%** (mục 3) |
+
+## 3. Kết quả chạy thật (nguyên văn, đã lược các dòng cảnh báo `staticfiles` lặp lại)
+
 ```text
 $ python manage.py check
 System check identified no issues (0 silenced).
+tests/test_administration.py: 38 warnings
+tests/test_auth.py: 15 warnings
+tests/test_finance.py: 1 warning
+tests/test_permissions.py: 2 warnings
+tests/test_storage.py: 2 warnings
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.18-final-0 _______________
+
+Name                                   Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------
+apps/core/__init__.py                      0      0   100%
+apps/core/admin.py                        47      4    91%   33, 36, 39, 46
+apps/core/apps.py                          6      0   100%
+apps/core/audit.py                        14      1    93%   14
+apps/core/codes.py                        54      4    93%   37, 40, 50, 53
+apps/core/context_processors.py            4      0   100%
+apps/core/finance.py                      79      2    97%   119, 176
+apps/core/migrations/0001_initial.py      10      0   100%
+apps/core/migrations/__init__.py           0      0   100%
+apps/core/mixins.py                       60      8    87%   43, 66, 70, 72, 94, 103-105
+apps/core/models.py                      413     34    92%   79, 95, 111, 234, 255, 265-268, 313, 378, 432, 444, 449, 493, 531, 562, 596, 616, 653, 718, 722, 730, 733, 737, 739, 790, 798, 800-803, 805, 862
+apps/core/permissions.py                  82      1    99%   160
+apps/core/signals.py                       2      0   100%
+apps/core/storage.py                     167     16    90%   119, 149, 152, 166, 171, 198-199, 216, 232, 282, 284, 286, 288, 298, 317, 319
+apps/core/urls.py                          4      0   100%
+apps/core/views.py                        69     39    43%   36, 63-86, 100-115, 122-142
+apps/core/workflow.py                    169     19    89%   104, 123-124, 257, 318-342, 357, 359, 361
+--------------------------------------------------------------------
+TOTAL                                   1180    128    89%
+Required test coverage of 85% reached. Total coverage: 89.15%
+163 passed, 58 warnings in 44.99s
+[exit 0]
+
+$ pytest -o addopts="" -p no:cacheprovider --cov=apps/administration --cov-report=term-missing --cov-fail-under=85 tests/test_administration.py
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.2.0, pluggy-1.7.0
+django: version: 5.2.19, settings: portal.settings.dev (from env)
+rootdir: /home/user/UEH-NXB
+configfile: pyproject.toml
+plugins: Faker-40.63.0, cov-7.1.0, django-4.14.0
+collected 42 items
+
+tests/test_administration.py ..........................................  [100%]
+
+=============================== warnings summary ===============================
+tests/test_administration.py: 38 warnings
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.18-final-0 _______________
+
+Name                              Stmts   Miss  Cover   Missing
+---------------------------------------------------------------
+apps/administration/__init__.py       0      0   100%
+apps/administration/apps.py           4      0   100%
+apps/administration/forms.py        105      0   100%
+apps/administration/services.py     151      0   100%
+apps/administration/urls.py           4      0   100%
+apps/administration/views.py        224      0   100%
+---------------------------------------------------------------
+TOTAL                               488      0   100%
+Required test coverage of 85% reached. Total coverage: 100.00%
+======================= 42 passed, 38 warnings in 11.80s =======================
+[exit 0]
+```
+=======
 $ ruff check .
 All checks passed!
 $ ruff format --check .
@@ -257,6 +351,7 @@ Required test coverage of 85% reached. Total coverage: 99.47%
 
 Ghi chú: phiên làm việc không có Docker daemon nên job `docker-smoke` chỉ chạy trên GitHub Actions. Đã mở thử trang `/` và `/quy-trinh/` bằng trình duyệt ở khổ iPhone 13: không tràn ngang.
 
+=======
 # BÁO CÁO KIỂM THỬ M1 — TÀI LIỆU & GOOGLE DRIVE (`m1-drive`, kèm CR-001)
 
 ## 1. Môi trường chạy thật (26/11/2026)
@@ -306,3 +401,23 @@ apps/documents_drive/storage.py                             269      8    97%   
 TOTAL                                                      1720    102    94%
 Required test coverage of 85% reached. Total coverage: 94.07%
 ============================= 202 passed in 30.46s ======================
+
+[exit 0]
+
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+[exit 0]
+
+$ ruff check .
+All checks passed!
+[exit 0]
+
+$ ruff format --check .
+72 files already formatted
+[exit 0]
+
+$ pytest --cov=apps/core --cov-fail-under=85 -q -p no:cacheprovider
+........................................................................ [ 44%]
+........................................................................ [ 88%]
+...................                                                      [100%]
+=============================== warnings summary =================

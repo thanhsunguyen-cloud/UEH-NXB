@@ -1,0 +1,6 @@
+<ul class="nav nav-pills flex-nowrap overflow-auto mb-3 small">
+  <li class="nav-item"><a class="nav-link text-nowrap {% if active == 'users' %}active{% endif %}" href="{% url 'administration:home' %}">Người dùng</a></li>
+  <li class="nav-item"><a class="nav-link text-nowrap {% if active == 'catalogs' %}active{% endif %}" href="{% url 'administration:catalogs' %}">Danh mục</a></li>
+  <li class="nav-item"><a class="nav-link text-nowrap {% if active == 'templates' %}active{% endif %}" href="{% url 'administration:templates' %}">Biểu mẫu</a></li>
+  <li class="nav-item"><a class="nav-link text-nowrap {% if active == 'audit' %}active{% endif %}" href="{% url 'administration:audit_logs' %}">Nhật ký hệ thống</a></li>
+</ul>
