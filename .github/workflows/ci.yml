@@ -67,7 +67,7 @@ jobs:
           FILE_STORAGE_BACKEND: local
           MEDIA_ROOT: /tmp/ueh-portal-ci-media
           EMAIL_URL: memorymail://
-        run: pytest --cov=apps/core --cov-fail-under=85
+        run: pytest --cov=apps --cov-fail-under=85
 
   docker-smoke:
     # Dựng Docker và mở thử Portal – thay cho việc Owner tự chạy docker compose trên máy
