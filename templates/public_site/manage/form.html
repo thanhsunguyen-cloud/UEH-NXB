@@ -1,0 +1,24 @@
+{% extends "public_site/manage/_layout.html" %}
+{% block manage_content %}
+<div class="bg-white border rounded p-4">
+  <h2 class="h5 fw-bold mb-3">{{ form_title }}</h2>
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+    {% for field in form %}
+      <div class="mb-3">
+        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+      </div>
+    {% endfor %}
+    {% if object.cover_storage_ref %}
+      <p class="small text-muted">Đã có ảnh bìa. Chọn tệp mới nếu muốn thay.</p>
+    {% endif %}
+    <p class="small text-muted">Lưu không làm thay đổi trạng thái đăng. Dùng nút “Đăng” / “Gỡ đăng” ở danh sách.</p>
+    <button type="submit" class="btn btn-primary">Lưu</button>
+    <a href="{% if manage_section == 'books' %}{% url 'public_site:book_manage' %}{% else %}{% url 'public_site:news_manage' %}{% endif %}" class="btn btn-link">Quay lại</a>
+  </form>
+</div>
+{% endblock %}

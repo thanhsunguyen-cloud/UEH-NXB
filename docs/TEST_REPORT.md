@@ -161,6 +161,102 @@ Required test coverage of 85% reached. Total coverage: 88.81%
 
 ---
 
+```
+
+## 4. Hướng dẫn chạy `drive_check` trên Shared Drive thật (dành cho Owner)
+
+1. Thêm service account vào Shared Drive của NXB với vai trò **Content Manager**.
+2. Đặt biến môi trường:
+   ```bash
+   FILE_STORAGE_BACKEND=gdrive
+   GDRIVE_SHARED_DRIVE_ID=<ID Shared Drive>
+   # Cloud Run: để trống để dùng tài khoản dịch vụ gắn với dịch vụ.
+   # Máy cục bộ: trỏ tới file JSON (không đưa vào kho).
+   GDRIVE_CREDENTIALS_FILE=/duong/dan/service-account.json
+   ```
+3. Chạy:
+   ```bash
+   python manage.py drive_check
+   ```
+   Lệnh đọc Shared Drive, tìm/tạo `Portal/_healthcheck/`, tạo một file thử, kiểm tra sha256, kiểm tra file nằm đúng Shared Drive, đọc lại dạng stream, xóa file thử, rồi kiểm tra mọi lời gọi có `supportsAllDrives=true`. Mỗi bước in `[ĐẠT]` hoặc `[LỖI]`. Kết quả mong đợi ở dòng cuối: `drive_check: TẤT CẢ ĐẠT.`. Nếu có bước không đạt, lệnh trả mã thoát ≠ 0. Thêm `--keep-file` nếu muốn giữ file thử để xem trên Drive.
+4. Ví dụ khi chưa cấu hình (chạy thật trong môi trường tạo mã):
+   ```text
+   $ python manage.py drive_check
+   Kiểm tra cấu hình Google Drive cho UEH Publishing Portal
+   - FILE_STORAGE_BACKEND = local
+   - Thông tin xác thực: Application Default Credentials
+   Lưu ý: FILE_STORAGE_BACKEND chưa là 'gdrive', ứng dụng vẫn đang lưu cục bộ.
+   [LỖI] Không khởi tạo được kết nối Google Drive: Chưa cấu hình GDRIVE_SHARED_DRIVE_ID cho FILE_STORAGE_BACKEND=gdrive.
+   CommandError: drive_check: KHÔNG ĐẠT.
+   ```
+5. Nghiệm thu cuối (Owner): bật `FILE_STORAGE_BACKEND=gdrive`, tải lên một file 50 MB qua giao diện, tải xuống, so sánh sha256 với `Document.sha256`.
+=======
+# BÁO CÁO KIỂM THỬ M6 — TRANG CÔNG KHAI (`m6-public-site`)
+
+## 1. Môi trường chạy thật
+
+- Python `3.12.3`, Django `5.2.19`, pytest `9.2.0`, ruff `0.17.6`
+- PostgreSQL: `PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu`
+- Biến môi trường giống bước pytest của `.github/workflows/ci.yml` (`DATABASE_URL=postgres://ueh_portal:…@localhost:5432/ueh_portal_test`, `FILE_STORAGE_BACKEND=local`, `MEDIA_ROOT=/tmp/ueh-portal-ci-media`, `EMAIL_URL=memorymail://`).
+- Ngày chạy: 26/11/2026. CR-001 **chưa** gộp vào `main`: test ảnh bìa dùng kho giả `FakeLibraryStorage` (`apps/public_site/tests/conftest.py`) có đúng chữ ký `save_library_file` của CR-001.
+
+## 2. Đối chiếu yêu cầu test bắt buộc (mục 6 gói M6)
+
+| Yêu cầu | Test |
+|---|---|
+| Mọi trang công khai trả 200 khi chưa đăng nhập | `test_public_pages_ok_for_anonymous` (7 trang), `test_news_detail_published_and_unpublished`, `test_form_download_active_only`, `test_image_only_for_published_items` |
+| Tin/sách chưa đăng: chi tiết và ảnh trả 404 | `test_news_detail_published_and_unpublished`, `test_image_only_for_published_items[tin-tuc/sach-moi]`, `test_published_cover_served_after_upload` |
+| Tải biểu mẫu chỉ bản đang áp dụng; bản đã tắt → 404 | `test_form_download_active_only`, `test_forms_page_lists_latest_active_per_code`, `test_form_download_missing_file_404` |
+| Trang quản lý: CUSTOMER và ADMIN nhận 404 | `test_manage_pages_404_for_customer_and_admin[customer/admin_user]` (mọi trang GET và POST đăng/gỡ đăng) |
+| Nội dung có `<script>` hiển thị dạng chữ | `test_script_content_is_escaped` |
+| Ảnh sai định dạng hoặc > 2 MB bị từ chối | `test_invalid_cover_rejected[gif/svg/fake-png/mismatch/empty/too-large]`, `test_cover_exactly_2mb_accepted` |
+| Độ phủ `apps/public_site` ≥ 85% | Mục 3 bên dưới: **99,47%** |
+
+Thêm: không lộ dữ liệu hồ sơ (`test_public_pages_do_not_show_case_data`), ghi `AuditEvent` `public.news_create/update/publish/unpublish`, `public.book_create/update/publish`, slug không trùng và không trùng `quan-ly`, ISBN-13 sai bị từ chối.
+
+## 3. Kết quả chạy thật (nguyên văn)
+
+```text
+$ python manage.py check
+System check identified no issues (0 silenced).
+$ ruff check .
+All checks passed!
+$ ruff format --check .
+77 files already formatted
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+$ pytest --cov=apps/core --cov-fail-under=85
+--------------------------------------------------------------------
+TOTAL                                   1180    130    89%
+Required test coverage of 85% reached. Total coverage: 88.98%
+====================== 168 passed, 66 warnings in 53.66s =======================
+$ pytest -o addopts="" apps/public_site --cov=apps/public_site --cov-report=term-missing --cov-fail-under=85
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                                          Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------
+apps/public_site/__init__.py                      0      0   100%
+apps/public_site/apps.py                          4      0   100%
+apps/public_site/forms.py                        38      0   100%
+apps/public_site/migrations/0001_initial.py       8      0   100%
+apps/public_site/migrations/__init__.py           0      0   100%
+apps/public_site/models.py                       42      2    95%   38, 68
+apps/public_site/services.py                     59      2    97%   48, 81
+apps/public_site/tests/__init__.py                0      0   100%
+apps/public_site/tests/conftest.py               44      0   100%
+apps/public_site/tests/helpers.py                19      0   100%
+apps/public_site/tests/test_manage.py           150      0   100%
+apps/public_site/tests/test_public_pages.py     148      0   100%
+apps/public_site/urls.py                          4      0   100%
+apps/public_site/views.py                       243      0   100%
+---------------------------------------------------------------------------
+TOTAL                                           759      4    99%
+Required test coverage of 85% reached. Total coverage: 99.47%
+======================= 47 passed, 46 warnings in 4.44s ========================
+```
+
+Ghi chú: phiên làm việc không có Docker daemon nên job `docker-smoke` chỉ chạy trên GitHub Actions. Đã mở thử trang `/` và `/quy-trinh/` bằng trình duyệt ở khổ iPhone 13: không tràn ngang.
+
 # BÁO CÁO KIỂM THỬ M1 — TÀI LIỆU & GOOGLE DRIVE (`m1-drive`, kèm CR-001)
 
 ## 1. Môi trường chạy thật (26/11/2026)
@@ -209,33 +305,4 @@ apps/documents_drive/management/commands/drive_check.py      77      2    97%   
 apps/documents_drive/storage.py                             269      8    97%   194-195, 244, 255, 259, 288, 369, 446
 TOTAL                                                      1720    102    94%
 Required test coverage of 85% reached. Total coverage: 94.07%
-============================= 202 passed in 30.46s =============================
-```
-
-## 4. Hướng dẫn chạy `drive_check` trên Shared Drive thật (dành cho Owner)
-
-1. Thêm service account vào Shared Drive của NXB với vai trò **Content Manager**.
-2. Đặt biến môi trường:
-   ```bash
-   FILE_STORAGE_BACKEND=gdrive
-   GDRIVE_SHARED_DRIVE_ID=<ID Shared Drive>
-   # Cloud Run: để trống để dùng tài khoản dịch vụ gắn với dịch vụ.
-   # Máy cục bộ: trỏ tới file JSON (không đưa vào kho).
-   GDRIVE_CREDENTIALS_FILE=/duong/dan/service-account.json
-   ```
-3. Chạy:
-   ```bash
-   python manage.py drive_check
-   ```
-   Lệnh đọc Shared Drive, tìm/tạo `Portal/_healthcheck/`, tạo một file thử, kiểm tra sha256, kiểm tra file nằm đúng Shared Drive, đọc lại dạng stream, xóa file thử, rồi kiểm tra mọi lời gọi có `supportsAllDrives=true`. Mỗi bước in `[ĐẠT]` hoặc `[LỖI]`. Kết quả mong đợi ở dòng cuối: `drive_check: TẤT CẢ ĐẠT.`. Nếu có bước không đạt, lệnh trả mã thoát ≠ 0. Thêm `--keep-file` nếu muốn giữ file thử để xem trên Drive.
-4. Ví dụ khi chưa cấu hình (chạy thật trong môi trường tạo mã):
-   ```text
-   $ python manage.py drive_check
-   Kiểm tra cấu hình Google Drive cho UEH Publishing Portal
-   - FILE_STORAGE_BACKEND = local
-   - Thông tin xác thực: Application Default Credentials
-   Lưu ý: FILE_STORAGE_BACKEND chưa là 'gdrive', ứng dụng vẫn đang lưu cục bộ.
-   [LỖI] Không khởi tạo được kết nối Google Drive: Chưa cấu hình GDRIVE_SHARED_DRIVE_ID cho FILE_STORAGE_BACKEND=gdrive.
-   CommandError: drive_check: KHÔNG ĐẠT.
-   ```
-5. Nghiệm thu cuối (Owner): bật `FILE_STORAGE_BACKEND=gdrive`, tải lên một file 50 MB qua giao diện, tải xuống, so sánh sha256 với `Document.sha256`.
+============================= 202 passed in 30.46s ======================
