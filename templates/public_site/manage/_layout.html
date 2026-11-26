@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Tin tức & sách mới{% endblock %}
+{% block content %}
+<div class="mx-auto" style="max-width:1140px;">
+  <h1 class="h4 fw-bold mb-3">Tin tức &amp; sách mới</h1>
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link{% if manage_section == 'news' %} active{% endif %}" href="{% url 'public_site:news_manage' %}">Tin tức</a></li>
+    <li class="nav-item"><a class="nav-link{% if manage_section == 'books' %} active{% endif %}" href="{% url 'public_site:book_manage' %}">Sách mới</a></li>
+  </ul>
+  {% block manage_content %}{% endblock %}
+</div>
+{% endblock %}

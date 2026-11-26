@@ -1,0 +1,30 @@
+{% extends "public_site/manage/_layout.html" %}
+{% block manage_content %}
+<div class="d-flex justify-content-end mb-2">
+  <a href="{% url 'public_site:book_create' %}" class="btn btn-sm btn-primary">Thêm sách mới</a>
+</div>
+<div class="table-responsive bg-white border rounded">
+  <table class="table align-middle mb-0">
+    <thead><tr><th>Thứ tự</th><th>Tên sách</th><th>Tác giả</th><th>Năm</th><th>Trạng thái</th><th>Ảnh bìa</th><th></th></tr></thead>
+    <tbody>
+      {% for item in books %}
+        <tr>
+          <td>{{ item.sort_order }}</td>
+          <td>{{ item.title }}</td>
+          <td>{{ item.authors }}</td>
+          <td>{{ item.year }}</td>
+          <td>{% if item.is_published %}<span class="badge text-bg-success">Đã đăng</span>{% else %}<span class="badge text-bg-secondary">Chưa đăng</span>{% endif %}</td>
+          <td>{% if item.cover_storage_ref %}Có{% else %}—{% endif %}</td>
+          <td class="text-end text-nowrap">
+            <a href="{% url 'public_site:book_update' item.pk %}" class="btn btn-sm btn-outline-secondary">Sửa</a>
+            {% include "public_site/manage/_publish_button.html" with publish_url="public_site:book_publish" %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="text-muted">Chưa có sách mới.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

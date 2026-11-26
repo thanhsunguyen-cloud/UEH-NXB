@@ -1,0 +1,13 @@
+{% extends "public_site/_layout.html" %}
+{% block public_content %}
+<article class="bg-white border rounded p-4">
+  <h1 class="h3 fw-bold pub-text">{{ post.title }}</h1>
+  {% if post.published_at %}<div class="small text-muted mb-3">Đăng ngày {{ post.published_at|date:"d/m/Y" }}</div>{% endif %}
+  {% if post.cover_storage_ref %}
+    <img src="{% url 'public_site:image' 'tin-tuc' post.pk %}" class="img-fluid rounded mb-3" alt="Ảnh bìa: {{ post.title }}">
+  {% endif %}
+  <p class="lead pub-text">{{ post.summary }}</p>
+  <div class="pub-text">{{ post.body|linebreaks }}</div>
+  <a href="{% url 'public_site:news_list' %}" class="small">← Tất cả tin tức</a>
+</article>
+{% endblock %}
