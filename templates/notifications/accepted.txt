@@ -1,0 +1,12 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+NXB Kinh tế TP.HCM đã tiếp nhận hồ sơ của Quý khách.
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Mã NXB: {{ nxb_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+NXB sẽ phân công biên tập viên và thông báo khi có bước tiếp theo.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

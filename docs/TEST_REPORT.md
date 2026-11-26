@@ -421,3 +421,31 @@ $ pytest --cov=apps/core --cov-fail-under=85 -q -p no:cacheprovider
 ........................................................................ [ 88%]
 ...................                                                      [100%]
 =============================== warnings summary =================
+---
+
+# M4 – THÔNG BÁO EMAIL (nhánh `m4-notifications`, 26/11/2026)
+
+Môi trường: Python 3.13, PostgreSQL 16 cục bộ, biến môi trường giống `ci.yml` (`EMAIL_URL=memorymail://`).
+
+```
+$ ruff check .
+All checks passed!
+$ ruff format --check .
+97 files already formatted
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+$ python manage.py check
+System check identified no issues (0 silenced).
+$ pytest --cov=apps --cov-fail-under=85 -q
+apps/notifications/apps.py        9   0  100%
+apps/notifications/conf.py        5   0  100%
+apps/notifications/emails.py     82   0  100%
+apps/notifications/receivers.py   8   0  100%
+TOTAL                          3384 159   95%
+Required test coverage of 85% reached. Total coverage: 95.30%
+326 passed
+```
+
+`tests/test_notifications.py`: 35 test – đủ 9 dòng gửi của bảng mục 3 (đúng người nhận, tiêu đề, đường dẫn), 4 trạng thái không gửi, không gửi cho người thao tác / tài khoản khóa / không có email, không lộ ghi chú nội bộ – số tiền – mã trạng thái kỹ thuật, backend lỗi vẫn đổi trạng thái thành công và có `email.failed`. 21 test đi qua `change_status` thật của M0.
+
+Chạy thật với `EMAIL_URL=consolemail://` (DRAFT → SUBMITTED → NEED_SUPPLEMENT): BTV phụ trách nhận email "[NXB Kinh tế TP.HCM] TMP-… – Có hồ sơ cần xem xét" có đường dẫn `/noi-bo/ho-so/<uuid>/`; khách hàng nhận "… – NXB yêu cầu bổ sung hồ sơ" kèm nội dung yêu cầu và đường dẫn `/khach-hang/ho-so/<uuid>/`; mỗi email có phần văn bản và HTML, ghi 2 `AuditEvent` `email.sent`.

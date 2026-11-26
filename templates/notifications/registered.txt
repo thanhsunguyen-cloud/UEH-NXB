@@ -1,0 +1,12 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+Tác phẩm của Quý khách đã được đăng ký xuất bản.
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+ISBN: {{ isbn }}
+Trạng thái hiện tại: {{ status_label }}
+
+NXB sẽ thông báo khi có quyết định xuất bản.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

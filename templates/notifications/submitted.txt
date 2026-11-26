@@ -1,0 +1,12 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+{% if is_resubmission %}Người đại diện đã bổ sung và nộp lại hồ sơ{% else %}Có hồ sơ mới vừa được nộp{% endif %}, cần biên tập viên xem xét.
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Người đại diện: {{ owner_name }}
+Trạng thái hiện tại: {{ status_label }}
+
+Vui lòng mở hồ sơ trên Portal để kiểm tra và xử lý.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

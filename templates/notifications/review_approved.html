@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Kính gửi {{ recipient_name }},</p>
+<p>Bản thảo của Quý khách đã được duyệt.</p>
+<ul>
+  <li>Tên sách: {{ title }}</li>
+  <li>Mã hồ sơ: {{ display_code }}</li>
+  <li>Trạng thái hiện tại: {{ status_label }}</li>
+</ul>
+<p>NXB sẽ tiếp tục thủ tục đăng ký xuất bản và thông báo khi hoàn thành.</p>
+<p><a href="{{ case_url }}">Mở hồ sơ trên Portal</a></p>
+{% include "notifications/_footer.html" %}
+</body>
+</html>

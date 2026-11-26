@@ -1,0 +1,11 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+Hồ sơ xuất bản của Quý khách đã hoàn tất.
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+Cảm ơn Quý khách đã hợp tác cùng NXB Kinh tế TP.HCM.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}
