@@ -6,7 +6,7 @@ Owner (người duyệt và bấm gộp): Nguyễn Thanh Sử. Nhóm trưởng k
 ## Trước khi viết code
 1. Đọc `docs/CONVENTIONS.md` (hợp đồng kỹ thuật bắt buộc) và `docs/DATA_MODEL.md`.
 2. Đọc **đúng gói giao việc** của bạn trong `docs/packages/`. Chỉ làm những gì gói yêu cầu, không mở rộng phạm vi.
-3. Gặp điểm chưa rõ: ghi vào `docs/QUESTIONS.md` và hỏi Owner; không tự quyết định thay đổi lớn.
+3. Gặp điểm chưa rõ: ghi vào file câu hỏi mà gói chỉ định (ví dụ `docs/QUESTIONS_M2.md`; gói cũ dùng `docs/QUESTIONS.md`), chọn phương án đơn giản nhất và làm tiếp; không tự quyết định thay đổi lớn.
 
 ## Ranh giới
 - Mỗi AI làm trên **một nhánh riêng** theo tên trong gói, tách từ `main` mới nhất, và chỉ sửa trong thư mục của module mình.
@@ -23,7 +23,7 @@ ruff check .
 ruff format --check .
 # Cần PostgreSQL; biến môi trường mẫu xem ci.yml (DATABASE_URL, EMAIL_URL=memorymail:// ...)
 python manage.py makemigrations --check --dry-run
-pytest --cov=apps/core --cov-fail-under=85
+pytest --cov=apps --cov-fail-under=85
 ```
 Không tắt, xóa hay bỏ qua test để có dấu xanh.
 
