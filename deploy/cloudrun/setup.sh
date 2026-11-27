@@ -55,6 +55,16 @@ ADMIN_EMAILS="$ADMIN_EMAILS"
 GDRIVE_SHARED_DRIVE_ID="$GDRIVE_SHARED_DRIVE_ID"
 GOOGLE_OAUTH_CLIENT_ID="$GOOGLE_OAUTH_CLIENT_ID"
 EOF
+ADMIN_EMAILS="${ADMIN_EMAILS// /}"
+if [[ "$PROJECT_ID" =~ ^[0-9]+$ ]]; then
+  echo "Lỗi: đây là SỐ dự án. Hãy nhập MÃ dự án dạng chữ (ví dụ ueh-publishing-portal)."; rm -f "$CONFIG_FILE"; exit 1
+fi
+IFS=',' read -r -a _admins <<<"$ADMIN_EMAILS"
+for _e in "${_admins[@]}"; do
+  if [[ "$_e" != *@ueh.edu.vn ]]; then
+    echo "Lỗi: email Quản trị viên '$_e' phải có đuôi @ueh.edu.vn."; rm -f "$CONFIG_FILE"; exit 1
+  fi
+done
 gcloud config set project "$PROJECT_ID" >/dev/null
 RUN_SA="${RUN_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 ok "Dự án: $PROJECT_ID – vùng: $REGION"
@@ -143,7 +153,7 @@ say "8/8 Đóng gói và chạy Portal trên Cloud Run (5–10 phút)"
 ENV_VARS="DJANGO_SETTINGS_MODULE=portal.settings.prod,DJANGO_DEBUG=False"
 ENV_VARS+=",ALLOWED_HOSTS=.run.app,CSRF_TRUSTED_ORIGINS=https://*.run.app"
 ENV_VARS+=",DEFAULT_FROM_EMAIL=nxbkt@ueh.edu.vn,STAFF_GOOGLE_DOMAIN=ueh.edu.vn"
-ENV_VARS+=",GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}"
+[ -n "$GOOGLE_OAUTH_CLIENT_ID" ] && ENV_VARS+=",GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID}"
 SECRETS="DJANGO_SECRET_KEY=DJANGO_SECRET_KEY:latest,DATABASE_URL=DATABASE_URL:latest"
 SECRETS+=",EMAIL_URL=EMAIL_URL:latest,GOOGLE_OAUTH_CLIENT_SECRET=GOOGLE_OAUTH_CLIENT_SECRET:latest"
 if [ -n "$GDRIVE_SHARED_DRIVE_ID" ]; then
@@ -159,13 +169,13 @@ cd "$(dirname "$0")/../.."
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$RUN_SA" \
   --add-cloudsql-instances "$CONN_NAME" --allow-unauthenticated \
   --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 --timeout 300 \
-  --set-env-vars "^@^${ENV_VARS//,/@}@${ADMIN_VAR}" --set-secrets "$SECRETS"
+  --set-env-vars "^|^${ENV_VARS//,/|}|${ADMIN_VAR}" --set-secrets "$SECRETS"
 IMAGE="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(spec.template.spec.containers[0].image)')"
 
 # Cloud Run Job dùng để chạy lệnh quản trị (tạo Admin, kiểm tra Drive)
 JOB_ARGS=(--image "$IMAGE" --region "$REGION" --service-account "$RUN_SA"
   --set-cloudsql-instances "$CONN_NAME" --memory 1Gi
-  --set-env-vars "^@^${ENV_VARS//,/@}@${ADMIN_VAR}" --set-secrets "$SECRETS"
+  --set-env-vars "^|^${ENV_VARS//,/|}|${ADMIN_VAR}" --set-secrets "$SECRETS"
   --command python --args manage.py,bootstrap_admin)
 if gcloud run jobs describe "$JOB" --region "$REGION" >/dev/null 2>&1; then
   gcloud run jobs update "$JOB" "${JOB_ARGS[@]}" >/dev/null
