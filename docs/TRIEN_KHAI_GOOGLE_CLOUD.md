@@ -62,7 +62,7 @@ Dành cho Owner, không cần biết lập trình. Làm lần lượt từ Phầ
    ```
 2. Mã dự án, Email Quản trị viên: bấm Enter (giữ như cũ).
 3. **Mã Shared Drive**: dán mã ở Phần B2. **Client ID**: dán Client ID ở Phần E.
-4. Hỏi nhập lại mật khẩu email: gõ `K` rồi Enter. Hỏi **Client secret**: dán Client secret (chữ không hiện) → Enter.
+4. Hỏi về mật khẩu email: chỉ bấm Enter (giữ như cũ). Hỏi **Client secret**: dán Client secret (chữ không hiện) → Enter.
 5. Chờ đến **XONG**. Phải thấy dòng **"Kiểm tra Google Drive: ĐẠT"**. Nếu "CHƯA ĐẠT": kiểm tra lại Phần D rồi chạy lại lệnh ở bước 1.
 
 ## Phần G – Dùng thử
@@ -72,4 +72,4 @@ Dành cho Owner, không cần biết lập trình. Làm lần lượt từ Phầ
 4. Nhờ 1 biên tập viên và 1 người ngoài (Gmail) thử: người ngoài đăng ký tài khoản, tạo hồ sơ, nộp; biên tập viên tiếp nhận, yêu cầu bổ sung… Ghi lại góp ý gửi nhóm trưởng.
 
 ## Cập nhật khi có code mới
-Mở Cloud Shell, dán `cd ~/UEH-NXB && git pull && bash deploy/cloudrun/setup.sh`, bấm Enter qua mọi câu hỏi (gõ `K` khi được hỏi nhập lại), chờ **XONG**.
+Mở Cloud Shell, dán `cd ~/UEH-NXB && git pull && bash deploy/cloudrun/setup.sh`, bấm Enter qua mọi câu hỏi, chờ **XONG**.
