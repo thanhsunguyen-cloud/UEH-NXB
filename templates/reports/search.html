@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Tra cứu đầu sách{% endblock %}
+{% block content %}
+{% include "reports/_subnav.html" with active="search" %}
+<h1 class="h4 mb-3">Tra cứu đầu sách</h1>
+
+<form id="search-form" method="get" action="{% url 'reports:search' %}" class="row g-2 mb-3 align-items-center"
+      hx-get="{% url 'reports:search' %}" hx-target="#search-results" hx-swap="innerHTML" hx-push-url="true"
+      hx-trigger="input changed delay:400ms from:input, change, submit">
+  <div class="col-12 col-lg-5">
+    <label class="visually-hidden" for="{{ form.q.id_for_label }}">{{ form.q.label }}</label>{{ form.q }}
+  </div>
+  <div class="col-6 col-md-2 col-lg-1">
+    <label class="visually-hidden" for="{{ form.year.id_for_label }}">{{ form.year.label }}</label>{{ form.year }}
+  </div>
+  <div class="col-6 col-md-3 col-lg-2">{{ form.status }}</div>
+  <div class="col-6 col-md-3 col-lg-2">{{ form.category }}</div>
+  <div class="col-6 col-md-3 col-lg-2">{{ form.field }}</div>
+  <div class="col-6 col-md-3 col-lg-2">{{ form.mode }}</div>
+  <div class="col-6 col-md-3 col-lg-2">{{ form.source }}</div>
+  <div class="col-6 col-md-2 col-lg-1 d-grid"><button type="submit" class="btn btn-outline-secondary">Tìm</button></div>
+</form>
+{% if form.errors %}<div class="alert alert-warning small">Bộ lọc không hợp lệ: {% for f in form %}{% for e in f.errors %}{{ f.label }} – {{ e }} {% endfor %}{% endfor %}</div>{% endif %}
+<p class="small text-muted">Năm tính theo ngày quyết định xuất bản; nếu trống thì theo ngày xác nhận đăng ký xuất bản.</p>
+
+<div id="search-results">
+  {% include "reports/_search_results.html" %}
+</div>
+{% endblock %}

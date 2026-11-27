@@ -1,0 +1,1 @@
+{% with s=case.status %}<span class="badge {% if s == 'DRAFT' %}text-bg-light border{% elif s == 'SUBMITTED' or s == 'NEED_SUPPLEMENT' %}text-bg-warning{% elif s == 'REJECTED' %}text-bg-danger{% elif s == 'COMPLETED' %}text-bg-success{% elif s == 'ARCHIVED' %}text-bg-secondary{% else %}text-bg-info{% endif %}">{{ case.get_status_display }}</span>{% endwith %}

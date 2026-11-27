@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Nhập danh mục từ Excel{% endblock %}
+{% block content %}
+{% include "reports/_subnav.html" with active="import" %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">Nhập danh mục xuất bản từ Excel</h1>
+  <a class="btn btn-outline-primary btn-sm" href="{% url 'reports:import_template' %}">File mẫu nhập danh mục</a>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <p class="small text-muted mb-2">
+      Dùng đúng file mẫu (cột có dấu * là bắt buộc). Chỉ nhận file <strong>.xlsx</strong> tối đa 10 MB, tối đa 5.000 dòng;
+      file .xls cũ hãy <strong>Lưu thành .xlsx trước khi nhập</strong>. Ngày nhập kiểu ngày của Excel hoặc dạng dd/mm/yyyy.
+      Bước kiểm tra chỉ đọc file, <strong>chưa ghi gì</strong> vào hệ thống.
+    </p>
+    <form method="post" enctype="multipart/form-data" class="row g-2 align-items-start">
+      {% csrf_token %}
+      <div class="col-12 col-md-8">
+        {{ form.file }}
+        {% for e in form.file.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+        {% for e in form.non_field_errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="col-12 col-md-4 d-grid"><button type="submit" class="btn btn-primary">Bước 1 – Kiểm tra file</button></div>
+    </form>
+  </div>
+</div>
+
+{% if results is not None %}
+<div class="card">
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <span class="fw-semibold">Kết quả kiểm tra: {{ filename }}</span>
+    <span class="small">
+      Tổng {{ total }} dòng ·
+      <span class="text-success fw-semibold" id="valid-count">{{ valid_count }} hợp lệ</span> ·
+      <span class="text-danger fw-semibold" id="error-count">{{ error_count }} lỗi</span>
+    </span>
+  </div>
+  <div class="table-responsive" style="max-height: 60vh;">
+    <table class="table table-sm align-middle mb-0">
+      <thead class="table-light sticky-top">
+        <tr><th>Dòng</th><th>Kết quả</th><th>Tên xuất bản phẩm</th><th>Tác giả</th><th>ISBN</th><th>Số QĐXB</th><th>Ngày QĐXB</th><th>Lý do / cảnh báo</th></tr>
+      </thead>
+      <tbody>
+        {% for r in results %}
+          <tr class="{% if r.is_valid %}{% if r.warnings %}table-warning{% endif %}{% else %}table-danger{% endif %}">
+            <td>{{ r.row }}</td>
+            <td>{% if r.is_valid %}<span class="badge text-bg-success">Hợp lệ</span>{% else %}<span class="badge text-bg-danger">Lỗi</span>{% endif %}</td>
+            <td>{{ r.values.title }}</td>
+            <td class="small">{{ r.values.authors }}</td>
+            <td class="text-nowrap">{{ r.values.isbn }}</td>
+            <td class="text-nowrap">{{ r.values.decision_number }}</td>
+            <td class="text-nowrap">{{ r.values.decision_date }}</td>
+            <td class="small">
+              {% for e in r.errors %}<div class="text-danger">{{ e }}</div>{% endfor %}
+              {% for w in r.warnings %}<div class="text-warning-emphasis">{{ w }}</div>{% endfor %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-4">File không có dòng dữ liệu.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer">
+    {% if valid_count %}
+      <form method="post" class="d-flex flex-wrap align-items-center gap-2 m-0">
+        {% csrf_token %}
+        {{ confirm_form.payload }}
+        <button type="submit" class="btn btn-success">Bước 2 – Xác nhận nhập {{ valid_count }} dòng hợp lệ</button>
+        <span class="small text-muted">Các dòng lỗi sẽ không được nhập. Hệ thống kiểm tra lại trước khi ghi.</span>
+      </form>
+    {% else %}
+      <span class="text-muted small">Không có dòng hợp lệ để nhập. Sửa file và kiểm tra lại.</span>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+{% endblock %}

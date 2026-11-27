@@ -1,0 +1,12 @@
+<div class="card h-100">
+  <div class="card-header fw-semibold">{{ title }}</div>
+  <table class="table table-sm mb-0">
+    <tbody>
+      {% for row in items %}
+        <tr><td>{{ row.label }}</td><td class="text-end">{{ row.n }}</td></tr>
+      {% empty %}
+        <tr><td class="text-muted small">Không có dữ liệu.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
