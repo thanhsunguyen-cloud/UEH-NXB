@@ -1,0 +1,122 @@
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <h2 class="h6 fw-bold">Chuyển trạng thái <span class="small text-muted fw-normal">(hiện tại: {{ case.get_status_display }})</span></h2>
+    {% for t in transitions %}
+      <div class="border rounded p-2 mb-2 {% if t.suggested %}border-success border-2{% endif %}">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <strong>{{ t.label }}</strong>
+            {% if t.suggested %}<span class="badge text-bg-success ms-1">Gợi ý theo kết quả duyệt Mẫu 4</span>{% endif %}
+          </div>
+          <button type="button" class="btn btn-sm {% if t.danger %}btn-outline-danger{% elif t.missing %}btn-outline-secondary{% else %}btn-primary{% endif %}"
+                  data-bs-toggle="modal" data-bs-target="#modal-{{ t.to_status }}">{{ t.label }}</button>
+        </div>
+        {% if t.missing %}
+          <div class="small text-danger mt-1">Còn thiếu:
+            <ul class="mb-0">{% for m in t.missing %}<li>{{ m }}</li>{% endfor %}</ul>
+          </div>
+        {% endif %}
+      </div>
+      <div class="modal fade" id="modal-{{ t.to_status }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <form method="post" action="{% url 'backoffice:case_transition' case.pk %}" class="modal-content">
+            {% csrf_token %}
+            <input type="hidden" name="to_status" value="{{ t.to_status }}">
+            <div class="modal-header"><h5 class="modal-title">{{ t.label }} — {{ case.display_code }}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+            <div class="modal-body">
+              {% if t.missing %}
+                <div class="alert alert-warning small">Hồ sơ chưa đủ điều kiện: {{ t.missing|join:"; " }}.</div>
+              {% endif %}
+              <label class="form-label small fw-semibold">{% if t.needs_message %}Nội dung yêu cầu bổ sung <span class="text-danger">*</span>{% else %}Ghi chú (không bắt buộc){% endif %}</label>
+              <textarea name="note" rows="4" class="form-control" {% if t.needs_message %}required{% endif %}></textarea>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-primary">Xác nhận</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    {% empty %}
+      <p class="text-muted small">Không có bước chuyển trạng thái nào cho biên tập viên ở trạng thái này.</p>
+    {% endfor %}
+
+    {% if is_editing %}
+      <div class="mt-3">
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modal-review">Xác nhận duyệt theo Mẫu 4</button>
+      </div>
+      <div class="modal fade" id="modal-review" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <form method="post" action="{% url 'backoffice:case_review' case.pk %}" class="modal-content" id="review-form">
+            {% csrf_token %}
+            <div class="modal-header"><h5 class="modal-title">Xác nhận duyệt Mẫu 4 “đúng hồ sơ”</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+            <div class="modal-body row g-2">
+              <div class="col-12 small">
+                Mã hồ sơ: <strong>{{ case.display_code }}</strong> · Tên sách: <strong>{{ case.title }}</strong><br>
+                Tác giả: {% for c in contributors %}{{ c.full_name }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+              </div>
+              {% include "backoffice/_form_errors.html" with form=review_form %}
+              {% include "backoffice/_field.html" with field=review_form.manuscript %}
+              {% include "backoffice/_field.html" with field=review_form.form4 %}
+              <div class="col-12">
+                <label class="form-label small fw-semibold">Kết quả <span class="text-danger">*</span></label>
+                <div>{% for radio in review_form.result %}<div class="form-check form-check-inline">{{ radio.tag }} <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label></div>{% endfor %}</div>
+                {% for e in review_form.result.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+              </div>
+              {% include "backoffice/_field.html" with field=review_form.note col="col-12" %}
+              {% include "backoffice/_field.html" with field=review_form.confirm col="col-12" %}
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+              <button type="submit" class="btn btn-success">Ghi nhận kết quả duyệt</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      {% if review_form.errors %}
+        <script>document.addEventListener("DOMContentLoaded", function () { if (window.bootstrap) new bootstrap.Modal(document.getElementById("modal-review")).show(); });</script>
+      {% endif %}
+    {% endif %}
+
+    <h2 class="h6 fw-bold mt-4">Lịch sử duyệt bản thảo (Mẫu 4)</h2>
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead class="table-light"><tr><th>Thời điểm</th><th>Bản thảo</th><th>Mẫu 4</th><th>Kết quả</th><th>BTV</th><th>Ghi chú</th></tr></thead>
+        <tbody>
+          {% for r in reviews %}
+            <tr>
+              <td class="small text-nowrap">{{ r.confirmed_at|date:"d/m/Y H:i" }}</td>
+              <td>v{{ r.manuscript.version }}</td>
+              <td>v{{ r.form4.version }}</td>
+              <td>{{ r.get_result_display }}</td>
+              <td class="small">{{ r.confirmed_by.full_name|default:r.confirmed_by.email }}</td>
+              <td class="small">{{ r.note|default:"—" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-muted small">Chưa có lần duyệt nào.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <h2 class="h6 fw-bold">Dòng thời gian trạng thái</h2>
+    <ul class="list-group">
+      {% for h in history %}
+        <li class="list-group-item small">
+          <div class="d-flex justify-content-between">
+            <span>{{ h.get_from_status_display }} → <strong>{{ h.get_to_status_display }}</strong></span>
+            <span class="text-muted text-nowrap">{{ h.at|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div class="text-muted">{{ h.actor.full_name|default:h.actor.email }}</div>
+          {% if h.note %}<div class="mt-1">{{ h.note|linebreaksbr }}</div>{% endif %}
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted small">Chưa có lịch sử.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

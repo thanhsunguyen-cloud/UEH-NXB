@@ -1,0 +1,92 @@
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <h2 class="h6 fw-bold">Thông tin định danh</h2>
+    <dl class="row small mb-3">
+      <dt class="col-5">Mã tạm</dt><dd class="col-7">{{ case.temp_code }}</dd>
+      <dt class="col-5">Mã NXB</dt><dd class="col-7">{{ case.nxb_code|default:"Chưa cấp (tự cấp khi tiếp nhận)" }}</dd>
+      <dt class="col-5">ISBN</dt><dd class="col-7">{{ case.isbn|default:"—" }}</dd>
+      <dt class="col-5">Trạng thái</dt><dd class="col-7">{{ case.get_status_display }}</dd>
+      <dt class="col-5">Hình thức</dt><dd class="col-7">{{ case.get_publication_mode_display }}{% if case.partner_name %} — {{ case.partner_name }}{% endif %}</dd>
+      <dt class="col-5">Thể loại / Lĩnh vực</dt><dd class="col-7">{{ case.category|default:"—" }} / {{ case.field|default:"—" }}</dd>
+      <dt class="col-5">Nộp lúc</dt><dd class="col-7">{{ case.submitted_at|date:"d/m/Y H:i"|default:"—" }}</dd>
+      <dt class="col-5">Tiếp nhận lúc</dt><dd class="col-7">{{ case.accepted_at|date:"d/m/Y H:i"|default:"—" }}</dd>
+      <dt class="col-5">Số / ngày XNĐK</dt><dd class="col-7">{{ case.registration_number|default:"—" }} / {{ case.registration_date|date:"d/m/Y"|default:"—" }}</dd>
+      <dt class="col-5">Số / ngày QĐXB</dt><dd class="col-7">{{ case.decision_number|default:"—" }} / {{ case.decision_date|date:"d/m/Y"|default:"—" }}</dd>
+      <dt class="col-5">Số / ngày HĐ liên kết</dt><dd class="col-7">{{ case.contract_number|default:"—" }} / {{ case.contract_date|date:"d/m/Y"|default:"—" }}</dd>
+      <dt class="col-5">Ngày lưu chiểu</dt><dd class="col-7">{{ case.deposit_date|date:"d/m/Y"|default:"—" }}</dd>
+    </dl>
+
+    <h2 class="h6 fw-bold">Người đại diện</h2>
+    <dl class="row small mb-3">
+      <dt class="col-5">Họ tên</dt><dd class="col-7">{{ case.owner.full_name|default:"—" }}</dd>
+      <dt class="col-5">Email</dt><dd class="col-7 text-break">{{ case.owner.email }}</dd>
+      <dt class="col-5">Điện thoại</dt><dd class="col-7">{{ case.owner.phone|default:"—" }}</dd>
+      <dt class="col-5">Đơn vị</dt><dd class="col-7">{{ case.owner.organization|default:"—" }}</dd>
+    </dl>
+
+    <h2 class="h6 fw-bold">BTV phụ trách chính</h2>
+    <p class="small">{% if case.primary_editor %}{{ case.primary_editor.full_name|default:case.primary_editor.email }}{% else %}<span class="text-muted">Chưa giao</span>{% endif %}</p>
+
+    {% if can_edit %}
+      <form method="post" action="{% url 'backoffice:case_assign_editor' case.pk %}" class="row g-2 mb-4" id="assign-editor-form">
+        {% csrf_token %}
+        {% include "backoffice/_form_errors.html" with form=assign_form %}
+        {% include "backoffice/_field.html" with field=assign_form.primary_editor col="col-12 col-sm-8" %}
+        <div class="col-12 col-sm-4 d-grid align-self-end"><button class="btn btn-outline-primary btn-sm" type="submit">Giao BTV</button></div>
+      </form>
+
+      <h2 class="h6 fw-bold">Đổi người đại diện</h2>
+      <form method="post" action="{% url 'backoffice:case_change_owner' case.pk %}" class="row g-2" id="change-owner-form">
+        {% csrf_token %}
+        {% include "backoffice/_form_errors.html" with form=owner_form %}
+        {% include "backoffice/_field.html" with field=owner_form.email col="col-12" %}
+        {% include "backoffice/_field.html" with field=owner_form.reason col="col-12" %}
+        <div class="col-12"><button class="btn btn-outline-warning btn-sm" type="submit">Đổi người đại diện</button></div>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="col-12 col-lg-7">
+    {% if can_edit %}
+      <h2 class="h6 fw-bold">Sửa thông tin hồ sơ</h2>
+      <form method="post" action="{% url 'backoffice:case_update' case.pk %}" class="row g-2" id="case-info-form" novalidate>
+        {% csrf_token %}
+        {% include "backoffice/_form_errors.html" with form=info_form %}
+        {% include "backoffice/_field.html" with field=info_form.title col="col-12" %}
+        {% include "backoffice/_field.html" with field=info_form.subtitle col="col-12" %}
+        {% include "backoffice/_field.html" with field=info_form.category %}
+        {% include "backoffice/_field.html" with field=info_form.field %}
+        {% include "backoffice/_field.html" with field=info_form.language %}
+        {% include "backoffice/_field.html" with field=info_form.translated_from %}
+        {% include "backoffice/_field.html" with field=info_form.edition_number %}
+        {% include "backoffice/_field.html" with field=info_form.is_reprint %}
+        {% include "backoffice/_field.html" with field=info_form.publication_mode %}
+        {% include "backoffice/_field.html" with field=info_form.partner_name %}
+        {% include "backoffice/_field.html" with field=info_form.page_count %}
+        {% include "backoffice/_field.html" with field=info_form.book_size %}
+        {% include "backoffice/_field.html" with field=info_form.summary col="col-12" %}
+        <div class="col-12"><hr class="my-2"><span class="small fw-semibold text-muted">Số liệu đăng ký – quyết định – lưu chiểu</span></div>
+        {% include "backoffice/_field.html" with field=info_form.isbn %}
+        <div class="col-12 col-md-6"><label class="form-label small fw-semibold">Mã NXB</label><input class="form-control" value="{{ case.nxb_code|default:'Tự cấp khi tiếp nhận' }}" disabled readonly></div>
+        {% include "backoffice/_field.html" with field=info_form.registration_number %}
+        {% include "backoffice/_field.html" with field=info_form.registration_date %}
+        {% include "backoffice/_field.html" with field=info_form.decision_number %}
+        {% include "backoffice/_field.html" with field=info_form.decision_date %}
+        {% include "backoffice/_field.html" with field=info_form.contract_number %}
+        {% include "backoffice/_field.html" with field=info_form.contract_date %}
+        {% include "backoffice/_field.html" with field=info_form.deposit_date %}
+        <div class="col-12 mt-2"><button class="btn btn-primary" type="submit">Lưu thông tin</button></div>
+      </form>
+    {% else %}
+      <div class="alert alert-secondary small">Hồ sơ đã hoàn tất hoặc lưu trữ: chỉ xem, không sửa thông tin.</div>
+      <h2 class="h6 fw-bold">Thông tin tác phẩm</h2>
+      <dl class="row small">
+        <dt class="col-4">Phụ đề</dt><dd class="col-8">{{ case.subtitle|default:"—" }}</dd>
+        <dt class="col-4">Ngôn ngữ</dt><dd class="col-8">{{ case.language }}{% if case.translated_from %} (dịch từ {{ case.translated_from }}){% endif %}</dd>
+        <dt class="col-4">Lần xuất bản</dt><dd class="col-8">{{ case.edition_number }}{% if case.is_reprint %} — tái bản{% endif %}</dd>
+        <dt class="col-4">Số trang / khổ</dt><dd class="col-8">{{ case.page_count|default:"—" }} / {{ case.book_size|default:"—" }}</dd>
+        <dt class="col-4">Tóm tắt</dt><dd class="col-8">{{ case.summary|linebreaksbr|default:"—" }}</dd>
+      </dl>
+    {% endif %}
+  </div>
+</div>

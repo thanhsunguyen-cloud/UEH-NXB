@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ cần xử lý{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">Hồ sơ cần xử lý</h1>
+  <form method="get" class="m-0">
+    <div class="form-check form-switch">
+      <input class="form-check-input" type="checkbox" role="switch" id="mine" name="mine" value="1"
+             {% if mine %}checked{% endif %} onchange="this.form.submit()">
+      <label class="form-check-label" for="mine">Chỉ hồ sơ tôi phụ trách</label>
+    </div>
+    <noscript><button type="submit" class="btn btn-sm btn-outline-secondary">Lọc</button></noscript>
+  </form>
+</div>
+
+<div class="row g-3">
+  {% for group in groups %}
+    <div class="col-12 col-xl-6">
+      <div class="card h-100" id="group-{{ group.key }}">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span class="fw-semibold">{{ forloop.counter }}. {{ group.title }}</span>
+          <span class="badge rounded-pill {% if group.count %}text-bg-primary{% else %}text-bg-secondary{% endif %}">{{ group.count }}</span>
+        </div>
+        <ul class="list-group list-group-flush">
+          {% for case in group.items %}
+            <li class="list-group-item d-flex justify-content-between align-items-start gap-2">
+              <div>
+                <a href="{% url 'backoffice:case_detail' case.pk %}" class="fw-semibold text-decoration-none">{{ case.display_code }}</a>
+                — {{ case.title }}
+                <div class="small text-muted">
+                  {{ case.owner.full_name|default:case.owner.email }} ·
+                  {% if case.primary_editor %}BTV: {{ case.primary_editor.full_name|default:case.primary_editor.email }}{% else %}Chưa giao BTV{% endif %}
+                </div>
+              </div>
+              <span class="small text-muted text-nowrap">{{ case.updated_at|date:"d/m/Y" }}</span>
+            </li>
+          {% empty %}
+            <li class="list-group-item text-muted small">Không có hồ sơ.</li>
+          {% endfor %}
+        </ul>
+        {% if group.count > group.items|length %}
+          <div class="card-footer small">
+            <a href="{% url 'backoffice:home' %}?status={{ group.status }}{% if mine %}&mine=on{% endif %}">Xem tất cả {{ group.count }} hồ sơ</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

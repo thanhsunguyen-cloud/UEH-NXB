@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Hồ sơ {{ case.display_code }}{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb small mb-2">
+    <li class="breadcrumb-item"><a href="{% url 'backoffice:home' %}">Danh sách hồ sơ</a></li>
+    <li class="breadcrumb-item active">{{ case.display_code }}</li>
+  </ol>
+</nav>
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-1">{{ case.title }}</h1>
+    <div class="small text-muted">
+      Mã hiển thị: <strong>{{ case.display_code }}</strong> ·
+      Mã NXB: <strong id="nxb-code">{{ case.nxb_code|default:"chưa cấp" }}</strong> ·
+      ISBN: <strong id="isbn">{{ case.isbn|default:"chưa có" }}</strong> ·
+      {% include "backoffice/_status_badge.html" %}
+    </div>
+  </div>
+  {% if can_view_finance %}
+    <a class="btn btn-outline-success btn-sm" id="finance-link" href="{{ finance_url }}">Xem tài chính hồ sơ</a>
+  {% endif %}
+</div>
+
+<ul class="nav nav-tabs flex-nowrap overflow-auto" role="tablist">
+  <li class="nav-item"><button class="nav-link text-nowrap {% if tab == 'overview' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button">Tổng quan</button></li>
+  <li class="nav-item"><button class="nav-link text-nowrap {% if tab == 'contributors' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-contributors" type="button">Tác giả <span class="badge text-bg-light border">{{ contributors|length }}</span></button></li>
+  <li class="nav-item"><button class="nav-link text-nowrap {% if tab == 'documents' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-documents" type="button">Tài liệu</button></li>
+  <li class="nav-item"><button class="nav-link text-nowrap {% if tab == 'workflow' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-workflow" type="button">Quy trình</button></li>
+  <li class="nav-item"><button class="nav-link text-nowrap {% if tab == 'notes' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-notes" type="button">Ghi chú &amp; trao đổi</button></li>
+</ul>
+<div class="tab-content bg-white border border-top-0 rounded-bottom p-3">
+  <div class="tab-pane fade {% if tab == 'overview' %}show active{% endif %}" id="tab-overview">{% include "backoffice/_tab_overview.html" %}</div>
+  <div class="tab-pane fade {% if tab == 'contributors' %}show active{% endif %}" id="tab-contributors">{% include "backoffice/_tab_contributors.html" %}</div>
+  <div class="tab-pane fade {% if tab == 'documents' %}show active{% endif %}" id="tab-documents">{% include "backoffice/_tab_documents.html" %}</div>
+  <div class="tab-pane fade {% if tab == 'workflow' %}show active{% endif %}" id="tab-workflow">{% include "backoffice/_tab_workflow.html" %}</div>
+  <div class="tab-pane fade {% if tab == 'notes' %}show active{% endif %}" id="tab-notes">{% include "backoffice/_tab_notes.html" %}</div>
+</div>
+{% endblock %}
