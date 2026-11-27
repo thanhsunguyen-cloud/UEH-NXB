@@ -1,0 +1,20 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Xác nhận email{% endblock %}
+{% block content %}
+{% include "account/_card_start.html" %}
+<h1 class="h4 fw-bold mb-3">Xác nhận địa chỉ email</h1>
+{% if confirmation %}
+  {% if can_confirm %}
+    <p>Xác nhận <strong>{{ confirmation.email_address.email }}</strong> là email của tài khoản này.</p>
+    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+      {% csrf_token %}{{ redirect_field }}
+      <button type="submit" class="btn btn-primary w-100" style="background-color:#005F69;border-color:#005F69;">Xác nhận</button>
+    </form>
+  {% else %}
+    <p>Email này đã được xác nhận cho một tài khoản khác.</p>
+  {% endif %}
+{% else %}
+  <p>Liên kết xác nhận đã hết hạn hoặc không hợp lệ. Vui lòng <a href="{% url 'accounts:login' %}">đăng nhập</a> để hệ thống gửi lại email xác nhận.</p>
+{% endif %}
+{% include "account/_card_end.html" %}
+{% endblock %}

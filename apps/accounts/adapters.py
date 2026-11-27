@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import logging
+
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
@@ -27,6 +29,9 @@ def get_home_url_for_user(user) -> str:
     return "/khach-hang/"
 
 
+logger = logging.getLogger(__name__)
+
+
 class PortalAccountAdapter(DefaultAccountAdapter):
     """Điều hướng sau đăng nhập theo vai trò và chặn nhân sự đăng nhập bằng mật khẩu."""
 
@@ -43,6 +48,20 @@ class PortalAccountAdapter(DefaultAccountAdapter):
 
 
 class PortalSocialAccountAdapter(DefaultSocialAccountAdapter):
+    def on_authentication_error(
+        self, request, provider, error=None, exception=None, extra_context=None
+    ):
+        """Ghi lý do đăng nhập Google thất bại vào nhật ký (không chứa mật khẩu/khóa)."""
+        logger.warning(
+            "Đăng nhập %s thất bại: error=%s exception=%r",
+            getattr(provider, "id", provider),
+            error,
+            exception,
+        )
+        return super().on_authentication_error(
+            request, provider, error=error, exception=exception, extra_context=extra_context
+        )
+
     """Kiểm soát đăng nhập Google theo quy tắc mục 5.1.
 
     - Người lạ có email @ueh.edu.vn đăng nhập Google KHÔNG tự động thành EDITOR mà là CUSTOMER.

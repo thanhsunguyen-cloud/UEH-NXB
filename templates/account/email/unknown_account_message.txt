@@ -1,0 +1,4 @@
+{% extends "account/email/base_message.txt" %}
+{% block content %}{% autoescape off %}Có yêu cầu đặt lại mật khẩu cho địa chỉ email này, nhưng email chưa đăng ký tài khoản trên Cổng thông tin xuất bản. Nếu bạn không yêu cầu, vui lòng bỏ qua email này.
+
+Đăng ký tài khoản tại: {{ signup_url }}{% endautoescape %}{% endblock content %}

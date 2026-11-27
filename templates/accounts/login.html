@@ -30,6 +30,10 @@
           <button type="submit" class="btn btn-primary w-100" style="background-color:#005F69;border-color:#005F69;">
             Đăng nhập bằng Email
           </button>
+          <div class="d-flex justify-content-between small mt-3">
+            <a href="{% url 'account_signup' %}">Đăng ký tài khoản khách hàng</a>
+            <a href="{% url 'account_reset_password' %}">Quên mật khẩu?</a>
+          </div>
         </form>
       </div>
     </div>

@@ -1,0 +1,22 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Đăng ký tài khoản{% endblock %}
+{% block content %}
+{% include "account/_card_start.html" %}
+<h1 class="h4 fw-bold mb-1">Đăng ký tài khoản khách hàng</h1>
+<p class="text-muted small mb-4">Dành cho tác giả, người đại diện hồ sơ xuất bản và đơn vị liên kết.
+  Nhân sự NXB không cần đăng ký – đăng nhập bằng Google @ueh.edu.vn.</p>
+<form method="post" action="{% url 'account_signup' %}">
+  {% csrf_token %}{{ redirect_field }}
+  {% include "account/_nonfield.html" %}
+  {% include "account/_field.html" with field=form.email label="Email" type="email" %}
+  {% include "account/_field.html" with field=form.password1 label="Mật khẩu" type="password" help="Ít nhất 8 ký tự, không quá đơn giản." %}
+  {% include "account/_field.html" with field=form.password2 label="Nhập lại mật khẩu" type="password" %}
+  <button type="submit" class="btn btn-primary w-100" style="background-color:#005F69;border-color:#005F69;">Đăng ký</button>
+</form>
+<p class="small mt-3 mb-0">Sau khi đăng ký, hệ thống gửi email xác nhận; bấm vào liên kết trong email để kích hoạt tài khoản.</p>
+<hr>
+<p class="small mb-2">Hoặc dùng tài khoản Google (Gmail) – không cần mật khẩu riêng:</p>
+<a href="/accounts/google/login/" class="btn btn-outline-dark w-100">Đăng ký / Đăng nhập bằng Google</a>
+<p class="small mt-3 mb-0">Đã có tài khoản? <a href="{% url 'accounts:login' %}">Đăng nhập</a></p>
+{% include "account/_card_end.html" %}
+{% endblock %}

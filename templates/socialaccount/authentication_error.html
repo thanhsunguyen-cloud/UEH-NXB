@@ -1,0 +1,9 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Đăng nhập Google không thành công{% endblock %}
+{% block content %}
+{% include "account/_card_start.html" %}
+<h1 class="h4 fw-bold mb-3">Đăng nhập Google không thành công</h1>
+<p>Đã có lỗi khi đăng nhập bằng tài khoản Google. Vui lòng thử lại; nếu vẫn lỗi, báo quản trị viên kèm thời điểm thử.</p>
+<a href="{% url 'accounts:login' %}" class="btn btn-outline-dark w-100">Quay lại trang đăng nhập</a>
+{% include "account/_card_end.html" %}
+{% endblock %}
