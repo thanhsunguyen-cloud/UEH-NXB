@@ -335,3 +335,34 @@ def test_customer_empty_note_rejected(client, customer_a):
 
 def test_public_forms_url_fallback():
     assert public_forms_url().startswith("/")
+
+
+@pytest.mark.django_db
+def test_timeline_shows_customer_facing_notes_for_revision_and_rejection(
+    client, customer_a, editor_none
+):
+    from apps.core.models import StatusHistory
+
+    case = PublicationCaseFactory(owner=customer_a, status=CaseStatus.REJECTED)
+    StatusHistory.objects.create(
+        case=case,
+        from_status=CaseStatus.EDITING,
+        to_status=CaseStatus.REVISION_REQUIRED,
+        actor=editor_none,
+        note="SUA-CHUONG-2",
+    )
+    StatusHistory.objects.create(
+        case=case,
+        from_status=CaseStatus.EDITING,
+        to_status=CaseStatus.REJECTED,
+        actor=editor_none,
+        note="LY-DO-TU-CHOI",
+    )
+    client.force_login(customer_a)
+    html = _detail(client, case)
+    assert "SUA-CHUONG-2" in html
+    assert "LY-DO-TU-CHOI" in html
+
+
+def test_public_forms_url_points_to_public_forms_page():
+    assert public_forms_url() == "/bieu-mau/"

@@ -24,3 +24,9 @@ Theo gói giao việc: gặp điểm chưa rõ thì chọn phương án đơn gi
 8. **Hủy hồ sơ nháp:** chưa làm theo mục 2.4. Đề xuất cân nhắc chức năng "hủy" (trạng thái mới hoặc ẩn hồ sơ nháp) ở đợt sau vì khách có thể tạo nhầm hồ sơ và không xóa được.
 
 9. **Dòng thời gian** hiện thêm mốc "Tạo hồ sơ" (lấy `created_at`), ngoài các bản ghi `StatusHistory`.
+
+## Quyết định của nhóm trưởng (Claude, 27/11/2026)
+- Q2: M6 đã có `public_site:forms` (`/bieu-mau/`) – bỏ phần dự phòng, trỏ thẳng.
+- Q1, Q8: ghi nhận cho đợt sau (sửa partial phân trang của M0; chức năng hủy hồ sơ nháp).
+- Q3–Q7, Q9: chấp nhận phương án tạm.
+- Bổ sung (khớp M4): dòng thời gian hiện ghi chú khi chuyển sang NEED_SUPPLEMENT, REVISION_REQUIRED, REJECTED; các trạng thái khác không hiện.

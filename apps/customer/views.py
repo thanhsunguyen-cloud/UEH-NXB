@@ -11,7 +11,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import NoReverseMatch, reverse
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views import View
@@ -65,12 +65,17 @@ def _snapshot(obj, fields: list[str]) -> dict:
     return data
 
 
+# Ghi chú chuyển trạng thái được hiện cho khách (khớp M3 và email M4).
+CUSTOMER_VISIBLE_NOTE_STATUSES = (
+    CaseStatus.NEED_SUPPLEMENT,
+    CaseStatus.REVISION_REQUIRED,
+    CaseStatus.REJECTED,
+)
+
+
 def public_forms_url() -> str:
-    """Link trang công khai "Tải biểu mẫu"; chưa có (M6) thì về trang chủ công khai."""
-    try:
-        return reverse("public_site:forms")
-    except NoReverseMatch:
-        return reverse("public_site:home")
+    """Link trang công khai "Tải biểu mẫu" (M6)."""
+    return reverse("public_site:forms")
 
 
 def submit_checklist(case) -> list[dict]:
@@ -269,7 +274,7 @@ class CustomerCaseDetailView(CustomerRequiredMixin, CaseAccessMixin, TemplateVie
                 {
                     "at": h.at,
                     "to_status": h.to_status,
-                    "note": h.note if h.to_status == CaseStatus.NEED_SUPPLEMENT else "",
+                    "note": h.note if h.to_status in CUSTOMER_VISIBLE_NOTE_STATUSES else "",
                 }
             )
         ctx.update(
