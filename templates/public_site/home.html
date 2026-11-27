@@ -1,0 +1,55 @@
+{% extends "public_site/_layout.html" %}
+{% block public_content %}
+<section class="bg-white border rounded p-4 mb-4">
+  <h1 class="h3 fw-bold">Cổng thông tin xuất bản</h1>
+  <p class="text-muted mb-3">
+    Nhà xuất bản Kinh tế Thành phố Hồ Chí Minh, trực thuộc Đại học Kinh tế Thành phố Hồ Chí Minh (UEH),
+    là đơn vị chuyên tổ chức biên soạn, biên tập, xuất bản và phát hành các ấn phẩm phục vụ công tác
+    đào tạo, nghiên cứu khoa học và phát triển tri thức.
+  </p>
+  <p class="text-muted mb-3">
+    Tác giả và đơn vị liên kết có thể nộp hồ sơ xuất bản trực tuyến, theo dõi tiến độ
+    và tải các biểu mẫu cần thiết.
+  </p>
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ submit_url }}" class="btn btn-primary" style="background-color:#005F69;border-color:#005F69;">Nộp hồ sơ xuất bản</a>
+    <a href="{% url 'public_site:process' %}" class="btn btn-outline-secondary">Quy trình</a>
+    <a href="{% url 'public_site:forms' %}" class="btn btn-outline-secondary">Tải biểu mẫu</a>
+  </div>
+  <p class="small text-muted mt-2 mb-0">
+    Chưa có tài khoản? <a href="{% url 'account_signup' %}">Đăng ký tài khoản khách hàng</a>.
+  </p>
+</section>
+
+<section class="mb-4">
+  <div class="d-flex justify-content-between align-items-baseline mb-2">
+    <h2 class="h5 fw-bold mb-0">Tin mới</h2>
+    <a href="{% url 'public_site:news_list' %}" class="small">Xem tất cả</a>
+  </div>
+  {% if latest_news %}
+    <div class="row g-3">
+      {% for post in latest_news %}
+        <div class="col-12 col-md-4">{% include "public_site/_news_card.html" %}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">Chưa có tin tức.</p>
+  {% endif %}
+</section>
+
+<section class="mb-4">
+  <div class="d-flex justify-content-between align-items-baseline mb-2">
+    <h2 class="h5 fw-bold mb-0">Sách mới</h2>
+    <a href="{% url 'public_site:books' %}" class="small">Xem tất cả</a>
+  </div>
+  {% if latest_books %}
+    <div class="row g-3">
+      {% for book in latest_books %}
+        <div class="col-6 col-md-3">{% include "public_site/_book_card.html" %}</div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted">Chưa có sách mới.</p>
+  {% endif %}
+</section>
+{% endblock %}

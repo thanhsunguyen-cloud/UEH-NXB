@@ -1,0 +1,34 @@
+{% extends "public_site/_layout.html" %}
+{% block public_content %}
+<h1 class="h3 fw-bold mb-3">Sách mới</h1>
+{% if books %}
+  <div class="row g-3">
+    {% for book in books %}
+      <div class="col-12 col-md-6">
+        <article class="card h-100">
+          <div class="row g-0">
+            <div class="col-4">
+              {% if book.cover_storage_ref %}
+                <img src="{% url 'public_site:image' 'sach-moi' book.pk %}" class="pub-cover rounded-start" alt="Bìa sách: {{ book.title }}" loading="lazy">
+              {% else %}
+                <div class="pub-cover rounded-start"></div>
+              {% endif %}
+            </div>
+            <div class="col-8">
+              <div class="card-body">
+                <h2 class="h6 fw-bold pub-text">{{ book.title }}</h2>
+                <div class="small text-muted pub-text">{{ book.authors }} · {{ book.year }}</div>
+                {% if book.isbn %}<div class="small text-muted">ISBN {{ book.isbn }}</div>{% endif %}
+                {% if book.description %}<div class="small mt-2 pub-text">{{ book.description|linebreaks }}</div>{% endif %}
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    {% endfor %}
+  </div>
+  {% include "partials/pagination.html" %}
+{% else %}
+  <p class="text-muted">Chưa có sách mới.</p>
+{% endif %}
+{% endblock %}

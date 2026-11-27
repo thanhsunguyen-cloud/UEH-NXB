@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Quản trị — Biểu mẫu{% endblock %}
+{% block content %}
+{% include "administration/_subnav.html" with active="templates" %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">Biểu mẫu tải về</h1>
+  <a class="btn btn-primary btn-sm" href="{% url 'administration:template_create' %}">+ Thêm phiên bản mới</a>
+</div>
+{% regroup form_templates by code as groups %}
+{% for group in groups %}
+  <div class="bg-white border rounded mb-3">
+    <div class="px-3 py-2 border-bottom fw-semibold">{{ group.grouper }}</div>
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light"><tr><th>Tên</th><th>Phiên bản</th><th>Ngày hiệu lực</th><th>Trạng thái</th><th>Tệp</th><th class="text-end">Thao tác</th></tr></thead>
+        <tbody>
+          {% for t in group.list %}
+            <tr>
+              <td>{{ t.name }}</td>
+              <td>{{ t.version }}</td>
+              <td>{{ t.effective_from|date:"d/m/Y" }}</td>
+              <td>{% if t.is_active %}<span class="badge text-bg-success">Đang áp dụng</span>{% else %}<span class="badge text-bg-secondary">Không áp dụng</span>{% endif %}</td>
+              <td class="text-break small"><a href="{% url 'administration:template_download' t.pk %}">{{ t.original_filename }}</a></td>
+              <td class="text-end text-nowrap">
+                <form method="post" action="{% url 'administration:template_toggle' t.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  {% if t.is_active %}
+                    <input type="hidden" name="active" value="0">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Tắt áp dụng</button>
+                  {% else %}
+                    <input type="hidden" name="active" value="1">
+                    <button type="submit" class="btn btn-outline-success btn-sm">Áp dụng</button>
+                  {% endif %}
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% empty %}
+  <p class="text-muted">Chưa có biểu mẫu nào.</p>
+{% endfor %}
+<p class="small text-muted">Mỗi mã chỉ có một phiên bản đang áp dụng; áp dụng một phiên bản sẽ tự tắt các phiên bản khác cùng mã.</p>
+{% endblock %}

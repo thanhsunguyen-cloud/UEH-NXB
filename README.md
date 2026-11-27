@@ -38,8 +38,19 @@ docker compose exec web python manage.py seed_demo
 - `DJANGO_SECRET_KEY`, `DJANGO_DEBUG`, `DATABASE_URL`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`
 - `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `STAFF_GOOGLE_DOMAIN=ueh.edu.vn`
 - `BOOTSTRAP_ADMIN_EMAILS` (tối đa 2 email `@ueh.edu.vn`)
-- `FILE_STORAGE_BACKEND` (`local` cho M0; `gdrive` do M1 triển khai), `MEDIA_ROOT`, `MAX_FILE_MB=200`
+- `FILE_STORAGE_BACKEND` (`local` mặc định; `gdrive` lưu trên Shared Drive – gói M1), `MEDIA_ROOT`, `MAX_FILE_MB=200`
+- `MAX_LIBRARY_FILE_MB=10`: dung lượng tối đa của file thư viện không thuộc hồ sơ (biểu mẫu `form_templates`, ảnh công khai `public_media`) lưu qua `get_storage().save_library_file(...)`
+- `GDRIVE_SHARED_DRIVE_ID`: ID của Shared Drive của NXB (service account cần vai trò Content Manager)
+- `GDRIVE_CREDENTIALS_FILE`: đường dẫn file JSON của service account; để trống thì dùng Application Default Credentials (tài khoản dịch vụ gắn với Cloud Run)
 - `EMAIL_URL` (trỏ tới `smtp://mailpit:1025` khi phát triển)
+
+### Cấu hình lưu trữ Google Drive
+
+1. Tạo (hoặc chọn) Shared Drive của NXB, thêm service account làm thành viên với vai trò **Content Manager**.
+2. Lấy ID của Shared Drive (phần cuối URL `https://drive.google.com/drive/folders/<ID>`) và đặt vào `GDRIVE_SHARED_DRIVE_ID`.
+3. Trên Cloud Run: gắn service account vào dịch vụ và để trống `GDRIVE_CREDENTIALS_FILE`. Khi chạy cục bộ: đặt `GDRIVE_CREDENTIALS_FILE` trỏ tới file JSON của service account (không đưa file này vào repository).
+4. Đặt `FILE_STORAGE_BACKEND=gdrive` rồi khởi động lại ứng dụng.
+5. Kiểm tra cấu hình thật: `python manage.py drive_check` (xem `apps/documents_drive/README.md`).
 
 ## 4. Lệnh thường dùng
 

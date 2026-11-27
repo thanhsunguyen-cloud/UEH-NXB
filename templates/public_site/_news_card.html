@@ -1,0 +1,10 @@
+<article class="card h-100">
+  {% if post.cover_storage_ref %}
+    <img src="{% url 'public_site:image' 'tin-tuc' post.pk %}" class="card-img-top pub-cover-news" alt="Ảnh bìa: {{ post.title }}" loading="lazy">
+  {% endif %}
+  <div class="card-body">
+    <h3 class="h6 card-title pub-text"><a href="{% url 'public_site:news_detail' post.slug %}" class="text-decoration-none">{{ post.title }}</a></h3>
+    {% if post.published_at %}<div class="small text-muted mb-1">{{ post.published_at|date:"d/m/Y" }}</div>{% endif %}
+    <p class="card-text small pub-text mb-0">{{ post.summary }}</p>
+  </div>
+</article>

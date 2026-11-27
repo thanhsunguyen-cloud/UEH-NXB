@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Quản trị — Sửa danh mục{% endblock %}
+{% block content %}
+{% include "administration/_subnav.html" with active="catalogs" %}
+<div class="row"><div class="col-12 col-md-8 col-lg-6">
+  <h1 class="h4 mb-3">Sửa {{ kind_label|lower }}: {{ item.name }}</h1>
+  <form method="post" class="bg-white border rounded p-3" novalidate>
+    {% csrf_token %}
+    {% include "administration/_form_errors.html" %}
+    {% for field in form %}{% include "administration/_field.html" %}{% endfor %}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">Lưu</button>
+      <a href="{% url 'administration:catalogs' %}?loai={{ kind }}" class="btn btn-outline-secondary">Hủy</a>
+    </div>
+  </form>
+</div></div>
+{% endblock %}

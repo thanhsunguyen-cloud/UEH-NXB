@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Quản trị — Người dùng{% endblock %}
+{% block content %}
+{% include "administration/_subnav.html" with active="users" %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <h1 class="h4 mb-0">Người dùng</h1>
+  <a class="btn btn-primary btn-sm" href="{% url 'administration:user_create' %}">+ Tạo tài khoản nhân sự</a>
+</div>
+
+<form id="user-filter" method="get" action="{% url 'administration:home' %}" class="row g-2 mb-3"
+      hx-get="{% url 'administration:home' %}" hx-target="#user-results" hx-swap="innerHTML"
+      hx-trigger="input changed delay:400ms, change, submit">
+  <div class="col-12 col-md-5">{{ filter_form.q }}</div>
+  <div class="col-6 col-md-3">{{ filter_form.role }}</div>
+  <div class="col-6 col-md-3">{{ filter_form.status }}</div>
+  <div class="col-12 col-md-1 d-grid"><button type="submit" class="btn btn-outline-secondary">Lọc</button></div>
+</form>
+
+<div id="user-results">
+  {% include "administration/_user_table.html" %}
+</div>
+{% endblock %}

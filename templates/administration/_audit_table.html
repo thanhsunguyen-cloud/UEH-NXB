@@ -1,0 +1,31 @@
+{% for error in filter_form.non_field_errors %}<div class="alert alert-danger py-2">{{ error }}</div>{% endfor %}
+{% for field in filter_form %}{% for error in field.errors %}<div class="alert alert-danger py-2">{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}
+<div class="table-responsive bg-white border rounded">
+  <table class="table table-sm align-middle mb-0 small">
+    <thead class="table-light">
+      <tr><th>Thời điểm</th><th>Người thực hiện</th><th>Thao tác</th><th>Đối tượng</th><th>Mã hồ sơ</th><th>IP</th><th>Chi tiết</th></tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td class="text-nowrap">{{ row.at|date:"d/m/Y H:i:s" }}</td>
+          <td class="text-break">{% if row.actor %}{{ row.actor.full_name|default:row.actor.email }}{% else %}<span class="text-muted">Hệ thống</span>{% endif %}</td>
+          <td><code>{{ row.action }}</code></td>
+          <td>{{ row.object_type }} #{{ row.object_id }}</td>
+          <td>{{ row.case_code|default:"—" }}</td>
+          <td>{{ row.ip_address|default:"—" }}</td>
+          <td>
+            {% if row.data_json %}
+              <details><summary>Xem</summary><pre class="mb-0 small text-wrap">{{ row.data_json }}</pre></details>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="text-center text-muted py-4">Không có bản ghi phù hợp.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div hx-boost="true" hx-target="#audit-results" hx-swap="innerHTML" hx-push-url="false" hx-include="#audit-filter">
+  {% include "partials/pagination.html" %}
+</div>

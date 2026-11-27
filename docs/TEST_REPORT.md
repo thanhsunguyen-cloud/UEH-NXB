@@ -158,3 +158,266 @@ TOTAL                                   1180    132    89%
 Required test coverage of 85% reached. Total coverage: 88.81%
 ====================== 121 passed, 20 warnings in 45.72s =======================
 ```
+
+---
+
+```
+
+## 4. Hướng dẫn chạy `drive_check` trên Shared Drive thật (dành cho Owner)
+
+1. Thêm service account vào Shared Drive của NXB với vai trò **Content Manager**.
+2. Đặt biến môi trường:
+   ```bash
+   FILE_STORAGE_BACKEND=gdrive
+   GDRIVE_SHARED_DRIVE_ID=<ID Shared Drive>
+   # Cloud Run: để trống để dùng tài khoản dịch vụ gắn với dịch vụ.
+   # Máy cục bộ: trỏ tới file JSON (không đưa vào kho).
+   GDRIVE_CREDENTIALS_FILE=/duong/dan/service-account.json
+   ```
+3. Chạy:
+   ```bash
+   python manage.py drive_check
+   ```
+   Lệnh đọc Shared Drive, tìm/tạo `Portal/_healthcheck/`, tạo một file thử, kiểm tra sha256, kiểm tra file nằm đúng Shared Drive, đọc lại dạng stream, xóa file thử, rồi kiểm tra mọi lời gọi có `supportsAllDrives=true`. Mỗi bước in `[ĐẠT]` hoặc `[LỖI]`. Kết quả mong đợi ở dòng cuối: `drive_check: TẤT CẢ ĐẠT.`. Nếu có bước không đạt, lệnh trả mã thoát ≠ 0. Thêm `--keep-file` nếu muốn giữ file thử để xem trên Drive.
+4. Ví dụ khi chưa cấu hình (chạy thật trong môi trường tạo mã):
+   ```text
+   $ python manage.py drive_check
+   Kiểm tra cấu hình Google Drive cho UEH Publishing Portal
+   - FILE_STORAGE_BACKEND = local
+   - Thông tin xác thực: Application Default Credentials
+   Lưu ý: FILE_STORAGE_BACKEND chưa là 'gdrive', ứng dụng vẫn đang lưu cục bộ.
+   [LỖI] Không khởi tạo được kết nối Google Drive: Chưa cấu hình GDRIVE_SHARED_DRIVE_ID cho FILE_STORAGE_BACKEND=gdrive.
+   CommandError: drive_check: KHÔNG ĐẠT.
+   ```
+5. Nghiệm thu cuối (Owner): bật `FILE_STORAGE_BACKEND=gdrive`, tải lên một file 50 MB qua giao diện, tải xuống, so sánh sha256 với `Document.sha256`.
+=======
+# BÁO CÁO KIỂM THỬ M6 — TRANG CÔNG KHAI (`m6-public-site`)
+
+## 1. Môi trường chạy thật
+
+- Python `3.12.3`, Django `5.2.19`, pytest `9.2.0`, ruff `0.17.6`
+- PostgreSQL: `PostgreSQL 16.15 (Ubuntu 16.15-0ubuntu0.24.04.1) on x86_64-pc-linux-gnu`
+- Biến môi trường giống bước pytest của `.github/workflows/ci.yml` (`DATABASE_URL=postgres://ueh_portal:…@localhost:5432/ueh_portal_test`, `FILE_STORAGE_BACKEND=local`, `MEDIA_ROOT=/tmp/ueh-portal-ci-media`, `EMAIL_URL=memorymail://`).
+- Ngày chạy: 26/11/2026. CR-001 **chưa** gộp vào `main`: test ảnh bìa dùng kho giả `FakeLibraryStorage` (`apps/public_site/tests/conftest.py`) có đúng chữ ký `save_library_file` của CR-001.
+
+## 2. Đối chiếu yêu cầu test bắt buộc (mục 6 gói M6)
+
+| Yêu cầu | Test |
+|---|---|
+| Mọi trang công khai trả 200 khi chưa đăng nhập | `test_public_pages_ok_for_anonymous` (7 trang), `test_news_detail_published_and_unpublished`, `test_form_download_active_only`, `test_image_only_for_published_items` |
+| Tin/sách chưa đăng: chi tiết và ảnh trả 404 | `test_news_detail_published_and_unpublished`, `test_image_only_for_published_items[tin-tuc/sach-moi]`, `test_published_cover_served_after_upload` |
+| Tải biểu mẫu chỉ bản đang áp dụng; bản đã tắt → 404 | `test_form_download_active_only`, `test_forms_page_lists_latest_active_per_code`, `test_form_download_missing_file_404` |
+| Trang quản lý: CUSTOMER và ADMIN nhận 404 | `test_manage_pages_404_for_customer_and_admin[customer/admin_user]` (mọi trang GET và POST đăng/gỡ đăng) |
+| Nội dung có `<script>` hiển thị dạng chữ | `test_script_content_is_escaped` |
+| Ảnh sai định dạng hoặc > 2 MB bị từ chối | `test_invalid_cover_rejected[gif/svg/fake-png/mismatch/empty/too-large]`, `test_cover_exactly_2mb_accepted` |
+| Độ phủ `apps/public_site` ≥ 85% | Mục 3 bên dưới: **99,47%** |
+
+Thêm: không lộ dữ liệu hồ sơ (`test_public_pages_do_not_show_case_data`), ghi `AuditEvent` `public.news_create/update/publish/unpublish`, `public.book_create/update/publish`, slug không trùng và không trùng `quan-ly`, ISBN-13 sai bị từ chối.
+
+## 3. Kết quả chạy thật (nguyên văn)
+
+
+---
+
+# BÁO CÁO KIỂM THỬ M7 — QUẢN TRỊ HỆ THỐNG (`m7-admin`)
+
+## 1. Môi trường chạy
+
+- Python 3.13.18, Django 5.2.19, PostgreSQL 16.15, pytest 9.2.0, ruff 0.17.6.
+- Chạy trực tiếp trên PostgreSQL thật với đúng biến môi trường của `.github/workflows/ci.yml` (container của phiên làm việc không có Docker daemon; bước `docker-smoke` do CI trên GitHub chạy).
+- Lưu file biểu mẫu: test dùng **bản giả** `save_library_file` (lớp `FakeLibraryStorage` trong `tests/test_administration.py`) vì CR-001 chưa vào `main`. Sẽ chạy lại với bản thật sau khi CR-001 được gộp.
+
+## 2. Phạm vi test (`tests/test_administration.py`, 42 test)
+
+| Yêu cầu mục 4 của gói M7 | Test |
+|---|---|
+| Mọi URL M7: CUSTOMER, EDITOR nhận 404; chưa đăng nhập chuyển tới đăng nhập | `test_non_admin_gets_404_on_every_m7_url`, `test_anonymous_is_redirected_to_login_on_every_m7_url`, `test_locked_admin_is_treated_as_logged_out` |
+| Tạo nhân sự email ngoài domain UEH bị từ chối | `test_create_staff_outside_ueh_domain_is_rejected` |
+| Không làm số Admin hoạt động < 2; không tự khóa mình | `test_active_admins_never_drop_below_two`, `test_cannot_lock_or_demote_self` |
+| Đổi vai trò, quyền tài chính, khóa/mở ghi đúng `AuditEvent` | `test_role_finance_lock_unlock_write_correct_audit_events`, `test_create_editor_with_finance_access_logs_event` |
+| Danh mục: không có đường xóa; tắt mục đang dùng được | `test_catalog_in_use_can_be_disabled_and_is_never_deleted`, `test_no_delete_route_for_users_or_catalogs`, `test_catalog_create_update_toggle` |
+| Biểu mẫu: kích hoạt bản mới tự tắt bản cũ; từ chối sai định dạng/quá dung lượng | `test_activating_new_version_deactivates_old_same_code`, `test_template_rejects_wrong_extension`, `test_template_rejects_file_over_limit` |
+| Nhật ký: `case.*` không lộ `data` trong HTML | `test_audit_log_hides_data_of_case_document_finance` (kèm `document.*`, `finance.*`, nhóm khác) |
+| Độ phủ `apps/administration` ≥ 85% | **100%** (mục 3) |
+
+## 3. Kết quả chạy thật (nguyên văn, đã lược các dòng cảnh báo `staticfiles` lặp lại)
+
+```text
+$ python manage.py check
+System check identified no issues (0 silenced).
+tests/test_administration.py: 38 warnings
+tests/test_auth.py: 15 warnings
+tests/test_finance.py: 1 warning
+tests/test_permissions.py: 2 warnings
+tests/test_storage.py: 2 warnings
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.18-final-0 _______________
+
+Name                                   Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------
+apps/core/__init__.py                      0      0   100%
+apps/core/admin.py                        47      4    91%   33, 36, 39, 46
+apps/core/apps.py                          6      0   100%
+apps/core/audit.py                        14      1    93%   14
+apps/core/codes.py                        54      4    93%   37, 40, 50, 53
+apps/core/context_processors.py            4      0   100%
+apps/core/finance.py                      79      2    97%   119, 176
+apps/core/migrations/0001_initial.py      10      0   100%
+apps/core/migrations/__init__.py           0      0   100%
+apps/core/mixins.py                       60      8    87%   43, 66, 70, 72, 94, 103-105
+apps/core/models.py                      413     34    92%   79, 95, 111, 234, 255, 265-268, 313, 378, 432, 444, 449, 493, 531, 562, 596, 616, 653, 718, 722, 730, 733, 737, 739, 790, 798, 800-803, 805, 862
+apps/core/permissions.py                  82      1    99%   160
+apps/core/signals.py                       2      0   100%
+apps/core/storage.py                     167     16    90%   119, 149, 152, 166, 171, 198-199, 216, 232, 282, 284, 286, 288, 298, 317, 319
+apps/core/urls.py                          4      0   100%
+apps/core/views.py                        69     39    43%   36, 63-86, 100-115, 122-142
+apps/core/workflow.py                    169     19    89%   104, 123-124, 257, 318-342, 357, 359, 361
+--------------------------------------------------------------------
+TOTAL                                   1180    128    89%
+Required test coverage of 85% reached. Total coverage: 89.15%
+163 passed, 58 warnings in 44.99s
+[exit 0]
+
+$ pytest -o addopts="" -p no:cacheprovider --cov=apps/administration --cov-report=term-missing --cov-fail-under=85 tests/test_administration.py
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-9.2.0, pluggy-1.7.0
+django: version: 5.2.19, settings: portal.settings.dev (from env)
+rootdir: /home/user/UEH-NXB
+configfile: pyproject.toml
+plugins: Faker-40.63.0, cov-7.1.0, django-4.14.0
+collected 42 items
+
+tests/test_administration.py ..........................................  [100%]
+
+=============================== warnings summary ===============================
+tests/test_administration.py: 38 warnings
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.18-final-0 _______________
+
+Name                              Stmts   Miss  Cover   Missing
+---------------------------------------------------------------
+apps/administration/__init__.py       0      0   100%
+apps/administration/apps.py           4      0   100%
+apps/administration/forms.py        105      0   100%
+apps/administration/services.py     151      0   100%
+apps/administration/urls.py           4      0   100%
+apps/administration/views.py        224      0   100%
+---------------------------------------------------------------
+TOTAL                               488      0   100%
+Required test coverage of 85% reached. Total coverage: 100.00%
+======================= 42 passed, 38 warnings in 11.80s =======================
+[exit 0]
+```
+=======
+$ ruff check .
+All checks passed!
+$ ruff format --check .
+77 files already formatted
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+$ pytest --cov=apps/core --cov-fail-under=85
+--------------------------------------------------------------------
+TOTAL                                   1180    130    89%
+Required test coverage of 85% reached. Total coverage: 88.98%
+====================== 168 passed, 66 warnings in 53.66s =======================
+$ pytest -o addopts="" apps/public_site --cov=apps/public_site --cov-report=term-missing --cov-fail-under=85
+_______________ coverage: platform linux, python 3.12.3-final-0 ________________
+
+Name                                          Stmts   Miss  Cover   Missing
+---------------------------------------------------------------------------
+apps/public_site/__init__.py                      0      0   100%
+apps/public_site/apps.py                          4      0   100%
+apps/public_site/forms.py                        38      0   100%
+apps/public_site/migrations/0001_initial.py       8      0   100%
+apps/public_site/migrations/__init__.py           0      0   100%
+apps/public_site/models.py                       42      2    95%   38, 68
+apps/public_site/services.py                     59      2    97%   48, 81
+apps/public_site/tests/__init__.py                0      0   100%
+apps/public_site/tests/conftest.py               44      0   100%
+apps/public_site/tests/helpers.py                19      0   100%
+apps/public_site/tests/test_manage.py           150      0   100%
+apps/public_site/tests/test_public_pages.py     148      0   100%
+apps/public_site/urls.py                          4      0   100%
+apps/public_site/views.py                       243      0   100%
+---------------------------------------------------------------------------
+TOTAL                                           759      4    99%
+Required test coverage of 85% reached. Total coverage: 99.47%
+======================= 47 passed, 46 warnings in 4.44s ========================
+```
+
+Ghi chú: phiên làm việc không có Docker daemon nên job `docker-smoke` chỉ chạy trên GitHub Actions. Đã mở thử trang `/` và `/quy-trinh/` bằng trình duyệt ở khổ iPhone 13: không tràn ngang.
+
+=======
+# BÁO CÁO KIỂM THỬ M1 — TÀI LIỆU & GOOGLE DRIVE (`m1-drive`, kèm CR-001)
+
+## 1. Môi trường chạy thật (26/11/2026)
+
+- **Python** `3.13.18` (CI dùng 3.12); **Django** `5.2.19`; **PostgreSQL** `16.15`
+- **pytest** `9.2.0` (`pytest-django 4.14.0`, `pytest-cov 7.1.0`); **ruff** `0.17.6`
+- **google-api-python-client** `2.202.0`; **google-auth** `2.63.1`
+- Biến môi trường giống `ci.yml` (`FILE_STORAGE_BACKEND=local`, `EMAIL_URL=memorymail://`, `DATABASE_URL=postgres://...@localhost:5432/ueh_portal_test`).
+- Test không gọi Drive thật. Toàn bộ test Drive dùng bản giả lập `tests/drive_fake.py`, mô phỏng Drive API v3 (files.list/create/get/update/delete, alt=media + Range, resumable upload) và ghi lại mọi request.
+- Môi trường tạo mã không chạy được Docker daemon, nên bước `docker-smoke` để CI trên GitHub đảm nhận.
+
+## 2. Đối chiếu yêu cầu test của gói M1 (mục 3.3)
+
+| Yêu cầu | Test |
+|---|---|
+| Upload 3 phần (8 MiB + 8 MiB + phần lẻ): đúng `Content-Range`, file ID, sha256 | `test_three_part_upload_content_range_file_id_and_sha256` |
+| Thử lại khi 503 rồi thành công; dừng sau 5 lần | `test_retry_on_503_then_success`, `test_chunk_retry_resumes_from_drive_received_offset`, `test_execute_stops_after_5_attempts_with_vietnamese_message`, `test_send_stops_after_5_attempts`, `test_chunk_upload_stops_after_5_attempts` |
+| `exists` = `False` khi file trong thùng rác (và khi đã xóa / ra khỏi Shared Drive) | `test_exists_false_for_trashed_moved_deleted_and_logs_missing` |
+| Mọi lời gọi có `supportsAllDrives=True` (kiểm tra trên request đã ghi lại) | `_assert_all_drives()` trong các test upload, thư viện và HTTP |
+| `save_library_file` lên Drive | `test_save_library_file_on_drive`, `test_save_library_file_multi_chunk`, `test_save_library_file_rejections` |
+| View tải xuống trả 404 và ghi `document.missing` khi file mất trên Drive | `test_download_of_file_removed_from_drive_returns_404_and_logs_missing` |
+| View M0: begin → chunk → complete qua HTTP với `LocalFileStorage`; tải xuống không có `Content-Length`; người không có quyền nhận 404/403 | `tests/test_core_views.py` (11 test), `apps/core/views.py` đạt **100%** (trước đó 43%) |
+| Độ phủ `apps/documents_drive` ≥ 85% | **97–100%** cho từng file (bảng bên dưới) |
+
+## 3. Kết quả chạy thật (nguyên văn, rút gọn phần `apps/core` không đổi)
+
+```text
+$ ruff check .
+All checks passed!
+$ ruff format --check .
+79 files already formatted
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+$ python manage.py check
+System check identified no issues (0 silenced).
+$ pytest --cov=apps/core --cov=apps/documents_drive --cov-fail-under=85
+...
+apps/core/storage.py                                        203     13    94%   156, 186, 189, 203, 208, 235-236, 316, 366, 368, 372, 382, 401
+apps/core/views.py                                           69      0   100%
+apps/documents_drive/__init__.py                              0      0   100%
+apps/documents_drive/apps.py                                  6      0   100%
+apps/documents_drive/client.py                              134      2    99%   69-70
+apps/documents_drive/management/__init__.py                   0      0   100%
+apps/documents_drive/management/commands/__init__.py          0      0   100%
+apps/documents_drive/management/commands/drive_check.py      77      2    97%   127, 137
+apps/documents_drive/storage.py                             269      8    97%   194-195, 244, 255, 259, 288, 369, 446
+TOTAL                                                      1720    102    94%
+Required test coverage of 85% reached. Total coverage: 94.07%
+============================= 202 passed in 30.46s ======================
+
+[exit 0]
+
+$ python manage.py makemigrations --check --dry-run
+No changes detected
+[exit 0]
+
+$ ruff check .
+All checks passed!
+[exit 0]
+
+$ ruff format --check .
+72 files already formatted
+[exit 0]
+
+$ pytest --cov=apps/core --cov-fail-under=85 -q -p no:cacheprovider
+........................................................................ [ 44%]
+........................................................................ [ 88%]
+...................                                                      [100%]
+=============================== warnings summary =================
