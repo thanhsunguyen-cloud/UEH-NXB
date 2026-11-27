@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Công nợ phí dịch vụ{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <h1 class="h4 mb-0">Công nợ phí dịch vụ xuất bản</h1>
+</div>
+{% include "finance/_nav.html" with active="debt" %}
+
+<form id="debt-filter" method="get" action="{% url 'finance:debt' %}" class="row g-2 mb-3 align-items-center"
+      hx-get="{% url 'finance:debt' %}" hx-target="#debt-results" hx-swap="innerHTML" hx-push-url="true"
+      hx-trigger="input changed delay:400ms from:input[type=text], change, submit">
+  <div class="col-12 col-lg-3">{{ form.q }}</div>
+  <div class="col-6 col-md-3 col-lg-2">{{ form.bucket }}</div>
+  <div class="col-6 col-md-3 col-lg-3">{{ form.fee_type }}</div>
+  <div class="col-12 col-md-4 col-lg-3">{{ form.payer }}</div>
+  <div class="col-12 col-md-2 col-lg-1 d-grid"><button type="submit" class="btn btn-outline-secondary">Lọc</button></div>
+</form>
+
+<div id="debt-results">
+  {% include "finance/_debt_results.html" %}
+</div>
+{% endblock %}

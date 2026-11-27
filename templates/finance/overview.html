@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load finance_tags %}
+{% block title %}Tổng quan tài chính{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <h1 class="h4 mb-0">Tổng quan tài chính – phí dịch vụ xuất bản</h1>
+  <a class="btn btn-outline-success btn-sm" id="export-csv" href="?{% if querystring %}{{ querystring }}&{% endif %}export=csv">Xuất CSV</a>
+</div>
+{% include "finance/_nav.html" with active="overview" %}
+
+<form method="get" action="{% url 'finance:overview' %}" class="row g-2 align-items-end mb-3 bg-white border rounded p-2">
+  <div class="col-6 col-md-3 col-lg-2"><label class="form-label small mb-1" for="{{ form.date_from.id_for_label }}">{{ form.date_from.label }}</label>{{ form.date_from }}</div>
+  <div class="col-6 col-md-3 col-lg-2"><label class="form-label small mb-1" for="{{ form.date_to.id_for_label }}">{{ form.date_to.label }}</label>{{ form.date_to }}</div>
+  <div class="col-6 col-md-3 col-lg-3"><label class="form-label small mb-1" for="{{ form.fee_type.id_for_label }}">{{ form.fee_type.label }}</label>{{ form.fee_type }}</div>
+  <div class="col-6 col-md-3 col-lg-3"><label class="form-label small mb-1" for="{{ form.publication_mode.id_for_label }}">{{ form.publication_mode.label }}</label>{{ form.publication_mode }}</div>
+  <div class="col-12 col-lg-2 d-grid"><button type="submit" class="btn btn-outline-secondary">Xem</button></div>
+  {% for error in form.non_field_errors %}<div class="col-12 text-danger small">{{ error }} Đang hiển thị năm hiện tại.</div>{% endfor %}
+</form>
+
+<p class="small text-muted mb-2">Kỳ: {{ data.date_from|date:"d/m/Y" }} – {{ data.date_to|date:"d/m/Y" }}. Phải thu tính theo ngày chứng từ (trống thì ngày tạo), đã thu tính theo ngày thu; đã gồm bút toán điều chỉnh và đảo.</p>
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-md-4"><div class="card h-100"><div class="card-body">
+    <div class="small text-muted">Phải thu phát sinh trong kỳ</div>
+    <div class="fs-4 fw-semibold" id="kpi-receivable">{{ data.total_receivable|vnd }}</div>
+  </div></div></div>
+  <div class="col-12 col-md-4"><div class="card h-100"><div class="card-body">
+    <div class="small text-muted">Đã thu trong kỳ</div>
+    <div class="fs-4 fw-semibold text-success" id="kpi-collected">{{ data.total_collected|vnd }}</div>
+  </div></div></div>
+  <div class="col-12 col-md-4"><div class="card h-100"><div class="card-body">
+    <div class="small text-muted">Còn nợ tại ngày {{ data.date_to|date:"d/m/Y" }}</div>
+    <div class="fs-4 fw-semibold text-danger" id="kpi-outstanding">{{ data.outstanding_at_end|vnd }}</div>
+  </div></div></div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-xl-6">
+    <div class="card"><div class="card-header fw-semibold">Theo tháng</div>
+      <div class="table-responsive"><table class="table table-sm table-striped mb-0" id="table-months">
+        <thead><tr><th>Tháng</th><th class="text-end">Phải thu</th><th class="text-end">Đã thu</th></tr></thead>
+        <tbody>
+          {% for m in data.months %}
+            <tr><td>{{ m.month|date:"m/Y" }}</td><td class="text-end">{{ m.receivable|vnd }}</td><td class="text-end">{{ m.collected|vnd }}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr class="fw-semibold"><td>Tổng</td><td class="text-end">{{ data.total_receivable|vnd }}</td><td class="text-end">{{ data.total_collected|vnd }}</td></tr></tfoot>
+      </table></div>
+    </div>
+  </div>
+  <div class="col-12 col-xl-6">
+    <div class="card"><div class="card-header fw-semibold">Theo loại phí</div>
+      <div class="table-responsive"><table class="table table-sm table-striped mb-0" id="table-fees">
+        <thead><tr><th>Loại phí</th><th class="text-end">Phải thu</th><th class="text-end">Đã thu</th></tr></thead>
+        <tbody>
+          {% for f in data.fee_types %}
+            <tr><td>{{ f.name }}</td><td class="text-end">{{ f.receivable|vnd }}</td><td class="text-end">{{ f.collected|vnd }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3" class="text-muted small">Không có số liệu trong kỳ.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

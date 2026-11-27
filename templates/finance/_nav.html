@@ -1,0 +1,7 @@
+<ul class="nav nav-pills mb-3 small">
+  <li class="nav-item"><a class="nav-link {% if active == 'overview' %}active{% endif %}" href="{% url 'finance:overview' %}">Tổng quan</a></li>
+  <li class="nav-item"><a class="nav-link {% if active == 'debt' %}active{% endif %}" href="{% url 'finance:debt' %}">Công nợ</a></li>
+  {% if can_manage %}
+    <li class="nav-item"><a class="nav-link {% if active == 'manage' %}active{% endif %}" href="{% url 'finance:manage' %}">Ghi nhận</a></li>
+  {% endif %}
+</ul>
