@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load finance_tags %}
+{% block title %}Tài chính hồ sơ {{ case.display_code }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <div>
+    <h1 class="h4 mb-0">Tài chính hồ sơ {{ case.display_code }}</h1>
+    <div class="text-muted">{{ case.title }}</div>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary btn-sm" id="back-link" href="{{ backoffice_url }}">← Quay lại hồ sơ</a>
+    {% if can_manage %}
+      <a class="btn btn-primary btn-sm" id="add-receivable" href="{% url 'finance:receivable_create' case.pk %}">Thêm khoản phải thu</a>
+    {% endif %}
+  </div>
+</div>
+{% include "finance/_nav.html" %}
+
+<div class="row g-3 mb-3">
+  <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body small">
+    <div><span class="text-muted">Mã hiển thị:</span> <strong>{{ case.display_code }}</strong></div>
+    <div><span class="text-muted">Tên sách:</span> {{ case.title }}</div>
+    <div><span class="text-muted">Người đại diện:</span> {{ case.owner.full_name|default:case.owner.email }}</div>
+    <div><span class="text-muted">Hình thức:</span> {{ case.get_publication_mode_display }}{% if case.partner_name %} – {{ case.partner_name }}{% endif %}</div>
+  </div></div></div>
+  <div class="col-12 col-lg-6"><div class="card h-100"><div class="card-body">
+    <div class="row text-center" id="case-totals">
+      <div class="col"><div class="small text-muted">Phải thu</div><div class="fw-semibold" id="total-receivable">{{ finance.totals.receivable|vnd }}</div></div>
+      <div class="col"><div class="small text-muted">Đã thu</div><div class="fw-semibold text-success" id="total-collected">{{ finance.totals.collected|vnd }}</div></div>
+      <div class="col"><div class="small text-muted">Còn nợ</div><div class="fw-semibold text-danger" id="total-outstanding">{{ finance.totals.outstanding|vnd }}</div></div>
+    </div>
+  </div></div></div>
+</div>
+
+{% for item in finance.items %}
+  {% with line=item.line rec=item.line.receivable %}
+  <div class="card mb-3" id="receivable-{{ rec.pk }}">
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div>
+        <span class="fw-semibold">#{{ rec.pk }} · {{ rec.fee_type.name }}</span>
+        {% if rec.description %}<span class="text-muted">– {{ rec.description }}</span>{% endif %}
+        <span class="badge text-bg-light border">{{ line.status_label }}</span>
+        {% if line.outstanding > 0 %}<span class="badge text-bg-secondary">{{ line.bucket_label }}</span>{% endif %}
+      </div>
+      {% if can_manage %}
+        <div class="d-flex gap-1">
+          <a class="btn btn-sm btn-success" href="{% url 'finance:collection_create' rec.pk %}">Ghi nhận đã thu</a>
+          <a class="btn btn-sm btn-outline-warning" href="{% url 'finance:receivable_adjust' rec.pk %}">Điều chỉnh</a>
+        </div>
+      {% endif %}
+    </div>
+    <div class="card-body small">
+      <div class="row g-2 mb-2">
+        <div class="col-6 col-md-3"><span class="text-muted">Người phải trả:</span> {{ rec.payer_name }}</div>
+        <div class="col-6 col-md-3"><span class="text-muted">Số hợp đồng:</span> {{ rec.contract_number|default:"—" }}</div>
+        <div class="col-6 col-md-3"><span class="text-muted">Chứng từ:</span> {{ rec.invoice_number|default:"—" }}{% if rec.invoice_date %} ({{ rec.invoice_date|date:"d/m/Y" }}){% endif %}</div>
+        <div class="col-6 col-md-3"><span class="text-muted">Hạn thanh toán:</span> {{ rec.due_date|date:"d/m/Y"|default:"—" }}</div>
+        {% if rec.note %}<div class="col-12"><span class="text-muted">Ghi chú:</span> {{ rec.note }}</div>{% endif %}
+      </div>
+      <table class="table table-sm mb-2">
+        <thead><tr><th>Ngày</th><th>Nội dung</th><th class="text-end">Số tiền</th><th>Ghi chú</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>{{ rec.invoice_date|default:rec.created_at|date:"d/m/Y" }}</td><td>Khoản phải thu gốc</td><td class="text-end">{{ rec.amount|vnd }}</td><td></td><td></td></tr>
+          {% for adj in item.adjustments %}
+            <tr class="table-warning"><td>{{ adj.created_at|date:"d/m/Y" }}</td><td>Bút toán điều chỉnh</td><td class="text-end">{{ adj.amount|vnd }}</td><td>{{ adj.note }}</td><td class="text-muted">{{ adj.created_by.full_name|default:adj.created_by.email }}</td></tr>
+          {% endfor %}
+          <tr class="fw-semibold"><td></td><td>Phải thu sau điều chỉnh</td><td class="text-end">{{ line.effective|vnd }}</td><td></td><td></td></tr>
+          {% for col in item.collections %}
+            <tr class="{% if col.is_adjustment %}table-danger{% else %}table-success{% endif %}">
+              <td>{{ col.paid_date|date:"d/m/Y" }}</td>
+              <td>{% if col.is_adjustment %}Đảo khoản thu{% else %}Đã thu{% endif %} · {{ col.get_method_display }}{% if col.reference %} · {{ col.reference }}{% endif %}</td>
+              <td class="text-end">{{ col.amount|vnd }}</td>
+              <td>{{ col.note }}</td>
+              <td class="text-end">
+                {% if can_manage and not col.is_adjustment and not col.already_reversed %}
+                  <a class="btn btn-sm btn-outline-danger py-0" href="{% url 'finance:collection_reverse' col.pk %}">Đảo khoản thu</a>
+                {% elif col.already_reversed %}<span class="text-muted">Đã đảo</span>{% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="text-muted">Chưa có lần thu nào.</td></tr>
+          {% endfor %}
+          <tr class="fw-semibold"><td></td><td>Đã thu / Còn nợ</td><td class="text-end">{{ line.collected|vnd }} / {{ line.outstanding|vnd }}</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endwith %}
+{% empty %}
+  <div class="alert alert-light border">Hồ sơ chưa có khoản phải thu.</div>
+{% endfor %}
+{% endblock %}

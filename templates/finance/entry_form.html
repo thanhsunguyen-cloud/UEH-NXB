@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load finance_tags %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <div>
+    <h1 class="h4 mb-0">{{ page_title }}</h1>
+    <div class="text-muted">Hồ sơ {{ case.display_code }} – {{ case.title }}</div>
+  </div>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ back_url }}">← Quay lại tài chính hồ sơ</a>
+</div>
+
+{% if line %}
+  <div class="alert alert-light border small">
+    Khoản #{{ receivable.pk }} · {{ receivable.fee_type.name }} · Phải thu {{ line.effective|vnd }} · Đã thu {{ line.collected|vnd }} · <strong>Còn nợ {{ line.outstanding|vnd }}</strong>
+  </div>
+{% endif %}
+{% if collection %}
+  <div class="alert alert-light border small">
+    Khoản thu #{{ collection.pk }} ngày {{ collection.paid_date|date:"d/m/Y" }}: <strong>{{ collection.amount|vnd }}</strong> ({{ collection.get_method_display }}). Bút toán đảo sẽ ghi số tiền âm tương ứng.
+  </div>
+{% endif %}
+{% if form.is_overpayment %}
+  <div class="alert alert-warning" id="overpayment-warning">Cảnh báo: số tiền thu vượt số còn nợ. Chỉ lưu được khi tích “Xác nhận thu vượt” và ghi chú lý do.</div>
+{% endif %}
+{% for error in form.non_field_errors %}<div class="alert alert-danger">{{ error }}</div>{% endfor %}
+
+<form method="post" class="bg-white border rounded p-3">
+  {% csrf_token %}
+  <div class="row g-3">
+    {% for field in form %}
+      {% include "finance/_field.html" with field=field col="col-12 col-md-6" %}
+    {% endfor %}
+  </div>
+  <div class="mt-3 d-flex gap-2">
+    <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+    <a class="btn btn-outline-secondary" href="{{ back_url }}">Hủy</a>
+  </div>
+</form>
+{% endblock %}

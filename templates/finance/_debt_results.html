@@ -1,0 +1,58 @@
+{% load finance_tags %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+  <span class="small text-muted">Tính đến ngày {{ today|date:"d/m/Y" }} · {{ page_obj.paginator.count }} khoản còn nợ</span>
+  <a class="btn btn-outline-success btn-sm" id="export-csv" href="{% url 'finance:debt' %}?{% if querystring %}{{ querystring }}&{% endif %}export=csv">Xuất CSV</a>
+</div>
+
+<div class="card mb-3"><div class="table-responsive">
+  <table class="table table-sm mb-0" id="table-aging">
+    <thead><tr><th>Nhóm tuổi nợ</th><th class="text-end">Số khoản</th><th class="text-end">Còn nợ</th></tr></thead>
+    <tbody>
+      {% for row in summary %}
+        <tr id="aging-{{ row.key }}"><td>{{ row.label }}</td><td class="text-end">{{ row.count }}</td><td class="text-end">{{ row.amount|vnd }}</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr class="fw-semibold"><td>Tổng</td><td></td><td class="text-end">{{ summary_total|vnd }}</td></tr></tfoot>
+  </table>
+</div></div>
+
+<div class="card"><div class="table-responsive">
+  <table class="table table-sm table-hover align-middle mb-0" id="table-debt">
+    <thead class="table-light">
+      <tr><th>Mã hồ sơ</th><th>Tên sách</th><th>Người phải trả</th><th>Loại phí</th>
+        <th class="text-end">Phải thu</th><th class="text-end">Đã thu</th><th class="text-end">Còn nợ</th>
+        <th>Hạn thanh toán</th><th>Tuổi nợ</th></tr>
+    </thead>
+    <tbody>
+      {% for line in lines %}
+        <tr>
+          <td><a href="{% url 'finance:case' line.receivable.case.pk %}">{{ line.receivable.case.display_code }}</a></td>
+          <td>{{ line.receivable.case.title }}</td>
+          <td>{{ line.receivable.payer_name }}</td>
+          <td>{{ line.receivable.fee_type.name }}</td>
+          <td class="text-end">{{ line.effective|vnd }}</td>
+          <td class="text-end">{{ line.collected|vnd }}</td>
+          <td class="text-end fw-semibold">{{ line.outstanding|vnd }}</td>
+          <td>{{ line.receivable.due_date|date:"d/m/Y"|default:"—" }}</td>
+          <td><span class="badge {% if line.bucket == 'NOT_DUE' %}text-bg-secondary{% elif line.bucket == 'D1_30' %}text-bg-warning{% else %}text-bg-danger{% endif %}">{{ line.bucket_label }}</span></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9" class="text-muted small">Không có khoản còn nợ.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div></div>
+
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Phân trang" class="mt-3">
+  <ul class="pagination pagination-sm mb-0">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">Trước</a></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">Sau</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

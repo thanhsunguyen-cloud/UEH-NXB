@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load finance_tags %}
+{% block title %}Ghi nhận tài chính{% endblock %}
+{% block content %}
+<h1 class="h4 mb-2">Ghi nhận khoản phải thu / đã thu</h1>
+{% include "finance/_nav.html" with active="manage" %}
+
+<form method="get" action="{% url 'finance:manage' %}" class="row g-2 mb-3">
+  <div class="col-12 col-md-8 col-lg-6">{{ form.q }}</div>
+  <div class="col-12 col-md-2 d-grid"><button type="submit" class="btn btn-primary">Tìm hồ sơ</button></div>
+</form>
+
+{% if results %}
+  <div class="card mb-3"><div class="card-header fw-semibold">Kết quả tìm “{{ term }}”</div>
+    <ul class="list-group list-group-flush" id="search-results">
+      {% for case in results %}
+        <li class="list-group-item"><a href="{% url 'finance:case' case.pk %}">{{ case.display_code }}</a> — {{ case.title }} <span class="small text-muted">({{ case.owner.full_name|default:case.owner.email }})</span></li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<div class="card"><div class="card-header fw-semibold">20 thao tác tài chính gần nhất</div>
+  <div class="table-responsive"><table class="table table-sm mb-0" id="recent-events">
+    <thead><tr><th>Thời điểm</th><th>Người thực hiện</th><th>Thao tác</th><th>Hồ sơ</th></tr></thead>
+    <tbody>
+      {% for ev in events %}
+        <tr>
+          <td>{{ ev.at|date:"d/m/Y H:i" }}</td>
+          <td>{{ ev.actor.full_name|default:ev.actor.email|default:"—" }}</td>
+          <td>{{ ev.action|finance_action_label }}</td>
+          <td>{% if ev.case %}<a href="{% url 'finance:case' ev.case.pk %}">{{ ev.case.display_code }}</a>{% else %}—{% endif %}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="text-muted small">Chưa có thao tác tài chính.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}
