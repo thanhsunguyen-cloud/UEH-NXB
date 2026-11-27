@@ -1,46 +1,32 @@
-"""Module M2 — Cổng khách hàng (trang khung placeholder M0)."""
+"""Module M2 — Cổng khách hàng."""
 
 from django.urls import path
-from django.views.generic import TemplateView
 
-from apps.core.mixins import CaseAccessMixin, CustomerRequiredMixin
-
-
-class CustomerHomeView(CustomerRequiredMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Hồ sơ của tôi", "module_code": "M2"}
-
-
-class CustomerNewCaseView(CustomerRequiredMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Tạo hồ sơ mới", "module_code": "M2"}
-
-
-class CustomerProfileView(CustomerRequiredMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Tài khoản", "module_code": "M2"}
-
-
-class CustomerCaseDetailView(CustomerRequiredMixin, CaseAccessMixin, TemplateView):
-    template_name = "placeholder.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "page_title": f"Chi tiết hồ sơ {self.case.display_code}",
-                "module_code": "M2",
-                "case": self.case,
-            }
-        )
-        return ctx
-
+from apps.customer import views
 
 app_name = "customer"
 
 urlpatterns = [
-    path("", CustomerHomeView.as_view(), name="home"),
-    path("tao-moi/", CustomerNewCaseView.as_view(), name="case_create"),
-    path("tai-khoan/", CustomerProfileView.as_view(), name="profile"),
-    path("ho-so/<uuid:case_id>/", CustomerCaseDetailView.as_view(), name="case_detail"),
+    path("", views.CustomerHomeView.as_view(), name="home"),
+    path("tao-moi/", views.CustomerNewCaseView.as_view(), name="case_create"),
+    path("tai-khoan/", views.CustomerProfileView.as_view(), name="profile"),
+    path("ho-so/<uuid:case_id>/", views.CustomerCaseDetailView.as_view(), name="case_detail"),
+    path("ho-so/<uuid:case_id>/sua/", views.CustomerCaseEditView.as_view(), name="case_edit"),
+    path("ho-so/<uuid:case_id>/nop/", views.CustomerCaseSubmitView.as_view(), name="case_submit"),
+    path("ho-so/<uuid:case_id>/trao-doi/", views.CustomerNoteAddView.as_view(), name="note_add"),
+    path(
+        "ho-so/<uuid:case_id>/tac-gia/them/",
+        views.ContributorFormView.as_view(),
+        name="contributor_add",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/tac-gia/<int:contributor_id>/sua/",
+        views.ContributorFormView.as_view(),
+        name="contributor_edit",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/tac-gia/<int:contributor_id>/xoa/",
+        views.ContributorRemoveView.as_view(),
+        name="contributor_remove",
+    ),
 ]

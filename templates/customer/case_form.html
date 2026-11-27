@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-9 col-xl-8">
+    <div class="bg-white border rounded p-4">
+      <h1 class="h4 fw-bold mb-3">{{ page_title }}{% if case %} <span class="text-muted fs-6">{{ case.display_code }}</span>{% endif %}</h1>
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+      {% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% include "customer/_field.html" with field=form.title %}
+        {% include "customer/_field.html" with field=form.subtitle %}
+        <div class="row">
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.category %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.field %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.language %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.translated_from %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.edition_number %}</div>
+          <div class="col-md-6 pt-md-4">{% include "customer/_field.html" with field=form.is_reprint %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.publication_mode %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.partner_name %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.page_count %}</div>
+          <div class="col-md-6">{% include "customer/_field.html" with field=form.book_size %}</div>
+        </div>
+        {% include "customer/_field.html" with field=form.summary %}
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-primary">Lưu</button>
+          <a href="{% if case %}{% url 'customer:case_detail' case.id %}{% else %}{% url 'customer:home' %}{% endif %}" class="btn btn-outline-secondary">Hủy</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
