@@ -1,0 +1,8 @@
+{% autoescape off %}Xin chào,
+
+{% block content %}{% endblock content %}
+
+Trân trọng,
+Nhà xuất bản Kinh tế TP. Hồ Chí Minh
+Email: nxbkt@ueh.edu.vn
+{% endautoescape %}

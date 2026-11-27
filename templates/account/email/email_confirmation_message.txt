@@ -1,0 +1,7 @@
+{% extends "account/email/base_message.txt" %}
+{% block content %}{% autoescape off %}Email này được dùng để đăng ký tài khoản khách hàng trên Cổng thông tin xuất bản của Nhà xuất bản Kinh tế TP. Hồ Chí Minh.
+
+{% if code %}Mã xác nhận của bạn: {{ code }}{% else %}Bấm vào liên kết sau để xác nhận email và kích hoạt tài khoản:
+{{ activate_url }}{% endif %}
+
+Nếu bạn không đăng ký, vui lòng bỏ qua email này.{% endautoescape %}{% endblock content %}

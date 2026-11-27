@@ -1,0 +1,13 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Đăng nhập bằng Google{% endblock %}
+{% block content %}
+{% include "account/_card_start.html" %}
+<h1 class="h4 fw-bold mb-3">Đăng nhập bằng Google</h1>
+<p>Bạn sẽ được chuyển sang trang của Google để chọn tài khoản. Nhân sự NXB chọn tài khoản <strong>@ueh.edu.vn</strong>.</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-primary w-100" style="background-color:#005F69;border-color:#005F69;">Tiếp tục với Google</button>
+</form>
+<p class="small mt-3 mb-0"><a href="{% url 'accounts:login' %}">Quay lại</a></p>
+{% include "account/_card_end.html" %}
+{% endblock %}

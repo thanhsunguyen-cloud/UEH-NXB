@@ -1,0 +1,9 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Đã hủy đăng nhập Google{% endblock %}
+{% block content %}
+{% include "account/_card_start.html" %}
+<h1 class="h4 fw-bold mb-3">Đã hủy đăng nhập Google</h1>
+<p>Bạn đã hủy đăng nhập bằng Google.</p>
+<a href="{% url 'accounts:login' %}" class="btn btn-outline-dark w-100">Quay lại trang đăng nhập</a>
+{% include "account/_card_end.html" %}
+{% endblock %}

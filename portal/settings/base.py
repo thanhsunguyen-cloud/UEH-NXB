@@ -151,6 +151,7 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_SUBJECT_PREFIX = "[NXB Kinh tế TP.HCM] "
 ACCOUNT_ADAPTER = "apps.accounts.adapters.PortalAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.PortalSocialAccountAdapter"
 SOCIALACCOUNT_LOGIN_ON_GET = False
@@ -186,3 +187,15 @@ LOGOUT_REDIRECT_URL = "/tai-khoan/dang-nhap/"
 EMAIL_CONFIG = env.email_url("EMAIL_URL", default="consolemail://")
 vars().update(EMAIL_CONFIG)
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL")
+
+
+# Ghi nhật ký ra màn hình (Cloud Run tự thu thập); không ghi dữ liệu bí mật.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "root": {"handlers": ["console"], "level": "WARNING"},
+    "loggers": {
+        "apps": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
+}

@@ -1,0 +1,9 @@
+{% extends "allauth/layouts/base.html" %}
+{% block head_title %}Xác nhận email{% endblock %}
+{% block content %}
+{% include "account/_card_start.html" %}
+<h1 class="h4 fw-bold mb-3">Vui lòng xác nhận email</h1>
+<p>Hệ thống đã gửi email xác nhận tới địa chỉ bạn đăng ký. Hãy mở email và bấm vào liên kết để kích hoạt tài khoản.</p>
+<p class="small text-muted mb-0">Không thấy email? Kiểm tra mục Thư rác/Quảng cáo, hoặc liên hệ nxbkt@ueh.edu.vn.</p>
+{% include "account/_card_end.html" %}
+{% endblock %}

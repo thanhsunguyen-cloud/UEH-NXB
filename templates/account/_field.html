@@ -1,0 +1,8 @@
+<div class="mb-3">
+  <label for="{{ field.id_for_label }}" class="form-label small">{{ label }}</label>
+  <input type="{{ type|default:'text' }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
+         value="{% if type != 'password' %}{{ field.value|default:'' }}{% endif %}"
+         class="form-control{% if field.errors %} is-invalid{% endif %}" {% if field.field.required %}required{% endif %}>
+  {% for e in field.errors %}<div class="invalid-feedback">{{ e }}</div>{% endfor %}
+  {% if help %}<div class="form-text">{{ help }}</div>{% endif %}
+</div>
