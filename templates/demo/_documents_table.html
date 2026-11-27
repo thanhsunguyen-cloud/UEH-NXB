@@ -1,0 +1,19 @@
+<div class="table-responsive">
+  <table class="table table-sm align-middle">
+    <thead><tr><th>Loại tài liệu</th><th>Phiên bản</th><th>Tên tệp</th><th>Ngày tải</th><th>Người tải</th><th></th></tr></thead>
+    <tbody>
+      {% for doc in case.documents %}
+      <tr>
+        <td>{{ doc.label }}</td>
+        <td><span class="badge text-bg-light border">v{{ doc.version }}</span></td>
+        <td class="text-break">{{ doc.filename }}</td>
+        <td>{{ doc.uploaded_at|date:"d/m/Y" }}</td>
+        <td>{{ doc.uploaded_by }}</td>
+        <td><button class="btn btn-sm btn-link p-0" data-demo-action="Tải xuống {{ doc.filename }}">Tải xuống</button></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-muted">Chưa có tài liệu.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

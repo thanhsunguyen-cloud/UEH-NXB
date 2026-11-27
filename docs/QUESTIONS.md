@@ -91,3 +91,20 @@ Các điểm dưới đây **chưa được Owner chốt**. Mã hiện tạm là
 - **Q1–Q7:** Chấp nhận toàn bộ cột "Đang làm tạm" (không đổi nhân sự về CUSTOMER – muốn ngừng thì khóa; bỏ mật khẩu cũ khi nâng CUSTOMER lên nhân sự; "Áp dụng ngay" mặc định bật; chặn trùng (mã, phiên bản); giữ bộ lọc bằng HTMX, không sửa partial M0; tìm người thực hiện bằng ô tìm; chỉ hiện `data` cho `user.*`, `auth.*`, `catalog.*`, `form_template.*`).
 - **Q8:** Không cần sửa CI – `main` đã đo `--cov=apps --cov-fail-under=85` cho mọi module.
 - **Q9:** CR-001 đã có trên `main`; nhóm trưởng đã gộp `main` vào nhánh và kiểm tra lại với `LocalFileStorage` thật (tải lên Mẫu 1, kích hoạt bản mới, tải về công khai qua `/bieu-mau/<pk>/tai/` – đạt).
+
+---
+
+# DEMO M2/M3 (AI-4) – ĐIỂM CHƯA RÕ VÀ PHƯƠNG ÁN ĐÃ CHỌN
+
+Theo chỉ đạo của Owner: ghi lại, chọn phương án đơn giản nhất, không dừng lại hỏi. Owner có thể đổi khi rà soát PR.
+
+| # | Câu hỏi | Đã làm | Phương án khác |
+|---|---|---|---|
+| D1 | Demo có cần đăng nhập và dùng mixin phân quyền của M0 không? Mixin vai trò sẽ chặn BTV xem màn hình khách hàng. | Không cần đăng nhập. Mọi view kế thừa `DemoEnabledMixin` (trong `apps/demo/views.py`) – trả 404 khi demo tắt; không dùng dữ liệu thật nên không cần `CaseAccessMixin`. | Bắt buộc đăng nhập (`LoginRequiredMixin`) với mọi vai trò. |
+| D2 | Đọc biến `DEMO_ENABLED` ở đâu? Gói chỉ cho sửa 1 dòng `INSTALLED_APPS` trong `base.py`. | Đọc trực tiếp `os.environ["DEMO_ENABLED"]` lúc xử lý request (chấp nhận `True/1/yes/on`), không thêm setting. | Thêm `DEMO_ENABLED = env.bool(...)` vào `base.py` (cần Owner cho phép). |
+| D3 | Tab Tài chính "chỉ hiện với người có quyền tài chính" – demo không có người dùng thật. | Mặc định hiện; tham số `?tai_chinh=0` giả lập BTV không có quyền (tab ẩn hẳn). | Thêm trang chọn "vai trò giả" ở trang chỉ mục. |
+| D4 | Test đặt ở đâu? Gói chỉ cho tạo `apps/demo/` và `templates/demo/`. | Đặt trong `apps/demo/tests/test_demo.py` (không sửa `tests/`). Test không dùng fixture `db` nên tự báo lỗi nếu view chạm database. | Đặt ở `tests/test_demo.py` như các module khác. |
+| D5 | Nhóm tuổi nợ: `apps.core.finance.aging_bucket` nhận model `Receivable`, không dùng được với dữ liệu giả. | Chép lại đúng logic (5 nhóm) trong `fake_data.aging_bucket`, ngày "hôm nay" cố định 26/11/2026. | – |
+| D6 | Tải tệp giả: quy ước cấm `<input type="file">` gửi qua form. | Không dùng ô chọn tệp; nút "Chọn tệp và tải lên" chỉ chạy thanh tiến trình giả bằng JavaScript. | Nhúng `partials/chunked_upload.html` (cần hồ sơ thật, sẽ ghi database). |
+| D7 | Định dạng tiền: `floatformat:"g"` với ngôn ngữ `vi` không nhóm hàng nghìn. | Thêm bộ lọc `vnd` trong `apps/demo/templatetags/demo_tags.py` (25000000 → 25.000.000). | Bật `USE_THOUSAND_SEPARATOR` toàn hệ thống (sửa M0). |
+| D8 | Nhánh: gói ghi `demo-m2-m3`. | Làm và đẩy lên nhánh `demo-m2-m3` (tách từ `main` mới nhất). | – |

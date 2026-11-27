@@ -1,0 +1,64 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="font-monospace text-muted">{{ case.display_code }}</span>
+  {% include "demo/_status_badge.html" with customer=True %}
+  <span class="text-muted small">· {{ case.mode_label }}</span>
+</div>
+<h2 class="h5">{{ case.title }}</h2>
+{% if case.todo %}<div class="alert alert-warning"><strong>Việc cần làm:</strong> {{ case.todo }}</div>{% endif %}
+
+<div class="row g-3">
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h3 class="h6 mb-3">Dòng thời gian</h3>
+      {% include "demo/_timeline.html" with customer=True %}
+    </div></div>
+  </div>
+  <div class="col-12 col-lg-8">
+    {% if case.open_supplements %}
+    <div class="card border-warning shadow-sm mb-3"><div class="card-body">
+      <h3 class="h6">Yêu cầu bổ sung đang mở</h3>
+      {% for s in case.open_supplements %}
+        <p class="mb-1">{{ s.text }}</p>
+        <div class="small text-muted mb-2">Ngày {{ s.created|date:"d/m/Y" }}</div>
+      {% endfor %}
+      <button class="btn btn-sm btn-warning" data-demo-action="Nộp lại hồ sơ sau khi bổ sung">Đã bổ sung – nộp lại</button>
+    </div></div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-3"><div class="card-body">
+      <h3 class="h6">Ghi chú NXB gửi bạn</h3>
+      {% for n in case.customer_notes %}
+        <div class="border-start border-3 border-primary ps-2 mb-2">
+          <div>{{ n.text }}</div>
+          <div class="small text-muted">{{ n.author }} · {{ n.date|date:"d/m/Y" }}</div>
+        </div>
+      {% empty %}
+        <p class="text-muted small mb-0">Chưa có ghi chú.</p>
+      {% endfor %}
+    </div></div>
+
+    <div class="card shadow-sm"><div class="card-body">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h3 class="h6 mb-0">Tài liệu và phiên bản</h3>
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadNew">Tải lên bản mới</button>
+      </div>
+      {% include "demo/_documents_table.html" %}
+    </div></div>
+  </div>
+</div>
+
+<div class="modal fade" id="uploadNew" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title h5">Tải lên bản mới</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+    <div class="modal-body">
+      <label class="form-label" for="u-type">Loại tài liệu</label>
+      <select class="form-select mb-3" id="u-type"><option>Bản thảo</option><option>Mẫu 2</option><option>Mẫu 3</option></select>
+      <p class="small text-muted">Bản mới không ghi đè bản cũ; hệ thống tăng số phiên bản.</p>
+      {% include "demo/_fake_upload.html" with bar_id="up-new" label="Tệp mới" hint="" %}
+    </div>
+    <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button></div>
+  </div></div>
+</div>
+{% endblock %}

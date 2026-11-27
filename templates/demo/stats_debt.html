@@ -1,0 +1,46 @@
+{% extends "demo/_layout.html" %}
+{% load demo_tags %}
+{% block demo_content %}
+<p class="small text-muted">Tính tuổi nợ tại ngày {{ today|date:"d/m/Y" }} (cố định cho bản demo). Chỉ BTV có quyền tài chính mới thấy màn hình này.</p>
+<div class="row g-2 mb-3">
+  <div class="col-12 col-md-4 col-xl-2">
+    <a class="card text-decoration-none h-100 {% if not selected %}border-primary{% endif %}" href="?">
+      <div class="card-body p-2"><div class="small text-muted">Tất cả còn nợ</div><div class="fw-bold text-danger">{{ grand_total|vnd }} đ</div></div>
+    </a>
+  </div>
+  {% for b in buckets %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <a class="card text-decoration-none h-100 {% if selected == b.code %}border-primary{% endif %}" href="?nhom={{ b.code }}">
+      <div class="card-body p-2">
+        <div class="small text-muted">{{ b.label }}</div>
+        <div class="fw-bold {% if b.code == 'NOT_DUE' %}text-body{% else %}text-danger{% endif %}">{{ b.total|vnd }} đ</div>
+        <div class="small text-muted">{{ b.count }} khoản</div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="table-responsive bg-white rounded shadow-sm">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>Mã hồ sơ</th><th>Tên sách</th><th>Người đại diện</th><th>Khoản phí</th><th class="text-end">Phải thu</th><th class="text-end">Đã thu</th><th class="text-end">Còn nợ</th><th>Hạn</th><th>Nhóm tuổi nợ</th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td class="font-monospace small">{% if r.slug %}<a href="{% url 'demo:editor_case_detail' r.slug %}?tab=tai-chinh">{{ r.display_code }}</a>{% else %}{{ r.display_code }}{% endif %}</td>
+        <td>{{ r.title }}</td>
+        <td class="small">{{ r.owner }}</td>
+        <td class="small">{{ r.fee }}</td>
+        <td class="text-end">{{ r.amount|vnd }}</td>
+        <td class="text-end">{{ r.collected|vnd }}</td>
+        <td class="text-end fw-semibold">{{ r.outstanding|vnd }}</td>
+        <td class="small">{{ r.due_date|date:"d/m/Y" }}</td>
+        <td><span class="badge {% if r.bucket == 'NOT_DUE' %}text-bg-secondary{% elif r.bucket == 'D1_30' %}text-bg-warning{% else %}text-bg-danger{% endif %}">{{ r.bucket_label }}</span>{% if r.overdue_days %}<div class="small text-muted">{{ r.overdue_days }} ngày</div>{% endif %}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="9" class="text-center text-muted py-3">Không có khoản còn nợ.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

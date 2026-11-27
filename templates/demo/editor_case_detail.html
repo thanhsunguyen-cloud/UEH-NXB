@@ -1,0 +1,197 @@
+{% extends "demo/_layout.html" %}
+{% load demo_tags %}
+{% block demo_content %}
+<div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+  <span class="font-monospace text-muted">{{ case.display_code }}</span>
+  {% include "demo/_status_badge.html" %}
+  <span class="text-muted small">· {{ case.mode_label }} · Người đại diện: {{ case.owner }}</span>
+</div>
+<h2 class="h5 mb-3">{{ case.title }}</h2>
+
+<div class="alert alert-light border small d-flex flex-wrap align-items-center gap-2">
+  <span>Giả lập quyền: {% if can_view_finance %}<strong>BTV có quyền tài chính</strong>{% else %}<strong>BTV không có quyền tài chính</strong> (tab Tài chính bị ẩn){% endif %}.</span>
+  {% if can_view_finance %}
+    <a href="?tai_chinh=0&tab={{ active_tab }}">Xem như BTV không có quyền tài chính</a>
+  {% else %}
+    <a href="?tai_chinh=1&tab={{ active_tab }}">Xem như BTV có quyền tài chính</a>
+  {% endif %}
+</div>
+
+{% with t=active_tab %}
+<ul class="nav nav-tabs flex-nowrap overflow-auto text-nowrap" role="tablist">
+  <li class="nav-item" role="presentation"><button class="nav-link{% if t == 'tong-quan' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-tong-quan" type="button" role="tab">Tổng quan</button></li>
+  <li class="nav-item" role="presentation"><button class="nav-link{% if t == 'tac-gia' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-tac-gia" type="button" role="tab">Tác giả</button></li>
+  <li class="nav-item" role="presentation"><button class="nav-link{% if t == 'tai-lieu' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-tai-lieu" type="button" role="tab">Tài liệu &amp; phiên bản</button></li>
+  <li class="nav-item" role="presentation"><button class="nav-link{% if t == 'quy-trinh' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-quy-trinh" type="button" role="tab">Quy trình</button></li>
+  <li class="nav-item" role="presentation"><button class="nav-link{% if t == 'ghi-chu' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-ghi-chu" type="button" role="tab">Ghi chú &amp; trao đổi</button></li>
+  {% if can_view_finance %}
+  <li class="nav-item" role="presentation"><button class="nav-link{% if t == 'tai-chinh' %} active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-tai-chinh" type="button" role="tab">Tài chính</button></li>
+  {% endif %}
+</ul>
+
+<div class="tab-content bg-white border border-top-0 rounded-bottom p-3 shadow-sm">
+  {# 1. Tổng quan #}
+  <div class="tab-pane fade{% if t == 'tong-quan' %} show active{% endif %}" id="tab-tong-quan" role="tabpanel">
+    <dl class="row mb-0">
+      <dt class="col-sm-4 col-lg-3">Mã tạm</dt><dd class="col-sm-8 col-lg-9 font-monospace">{{ case.temp_code }}</dd>
+      <dt class="col-sm-4 col-lg-3">Mã NXB</dt><dd class="col-sm-8 col-lg-9 font-monospace">{{ case.nxb_code|default:"– chưa cấp (cấp khi tiếp nhận) –" }}</dd>
+      <dt class="col-sm-4 col-lg-3">ISBN</dt><dd class="col-sm-8 col-lg-9 font-monospace">{{ case.isbn|default:"–" }}</dd>
+      <dt class="col-sm-4 col-lg-3">Số XNĐK</dt><dd class="col-sm-8 col-lg-9">{{ case.registration_number|default:"–" }}{% if case.registration_date %} · ngày {{ case.registration_date|date:"d/m/Y" }}{% endif %}</dd>
+      <dt class="col-sm-4 col-lg-3">Số QĐXB</dt><dd class="col-sm-8 col-lg-9">{{ case.decision_number|default:"–" }}{% if case.decision_date %} · ngày {{ case.decision_date|date:"d/m/Y" }}{% endif %}</dd>
+      {% if case.mode == "LINKED" %}
+      <dt class="col-sm-4 col-lg-3">Đơn vị liên kết</dt><dd class="col-sm-8 col-lg-9">{{ case.partner_name }}{% if case.contract_number %} · HĐ {{ case.contract_number }}{% endif %}</dd>
+      {% endif %}
+      <dt class="col-sm-4 col-lg-3">Thể loại</dt><dd class="col-sm-8 col-lg-9">{{ case.category }}</dd>
+      <dt class="col-sm-4 col-lg-3">Ngày tạo hồ sơ</dt><dd class="col-sm-8 col-lg-9">{{ case.created|date:"d/m/Y" }}</dd>
+      <dt class="col-sm-4 col-lg-3">BTV phụ trách</dt><dd class="col-sm-8 col-lg-9">{{ case.editor|default:"– chưa phân công –" }}</dd>
+    </dl>
+    <button class="btn btn-sm btn-outline-primary mt-2" data-demo-action="Sửa thông tin hồ sơ">Sửa thông tin</button>
+  </div>
+
+  {# 2. Tác giả #}
+  <div class="tab-pane fade{% if t == 'tac-gia' %} show active{% endif %}" id="tab-tac-gia" role="tabpanel">
+    <div class="table-responsive"><table class="table table-sm align-middle">
+      <thead><tr><th>Thứ tự</th><th>Họ tên</th><th>Vai trò</th><th>Email</th></tr></thead>
+      <tbody>{% for a in case.authors %}<tr><td>{{ a.order }}</td><td>{{ a.name }}</td><td>{{ a.role_label }}</td><td class="small">{{ a.email|default:"–" }}</td></tr>{% endfor %}</tbody>
+    </table></div>
+    <p class="small text-muted mb-0">Tác giả chỉ phục vụ thư mục sách, không có tài khoản. Người đại diện: {{ case.owner }}.</p>
+  </div>
+
+  {# 3. Tài liệu #}
+  <div class="tab-pane fade{% if t == 'tai-lieu' %} show active{% endif %}" id="tab-tai-lieu" role="tabpanel">
+    {% include "demo/_documents_table.html" %}
+    <button class="btn btn-sm btn-outline-primary" data-demo-action="Tải lên tài liệu NXB (Mẫu 4, 5, 6, 7, 9)">Tải lên tài liệu</button>
+  </div>
+
+  {# 4. Quy trình #}
+  <div class="tab-pane fade{% if t == 'quy-trinh' %} show active{% endif %}" id="tab-quy-trinh" role="tabpanel">
+    <div class="row g-3">
+      <div class="col-12 col-lg-6">
+        <h3 class="h6">Chuyển trạng thái hợp lệ</h3>
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          {% for s in case.next_statuses %}
+            <button class="btn btn-sm btn-outline-primary" data-demo-action="Chuyển sang: {{ s.label }}">&rarr; {{ s.label }}</button>
+          {% empty %}
+            <span class="text-muted small">Không có bước chuyển nào cho biên tập viên ở trạng thái này.</span>
+          {% endfor %}
+        </div>
+        {% if case.status == "EDITING" %}
+          <button class="btn btn-warning btn-sm mb-3" data-bs-toggle="modal" data-bs-target="#form4Modal">Xác nhận Mẫu 4 "đúng hồ sơ"</button>
+        {% endif %}
+        <h3 class="h6">Điều kiện còn thiếu</h3>
+        {% if case.missing %}
+          <ul class="small text-danger">{% for m in case.missing %}<li>{{ m }}</li>{% endfor %}</ul>
+        {% else %}
+          <p class="small text-success">Đủ điều kiện cho bước tiếp theo.</p>
+        {% endif %}
+      </div>
+      <div class="col-12 col-lg-6">
+        <h3 class="h6">Lịch sử trạng thái</h3>
+        {% include "demo/_timeline.html" %}
+      </div>
+    </div>
+  </div>
+
+  {# 5. Ghi chú #}
+  <div class="tab-pane fade{% if t == 'ghi-chu' %} show active{% endif %}" id="tab-ghi-chu" role="tabpanel">
+    {% for n in case.notes %}
+      <div class="border rounded p-2 mb-2 {% if n.visibility == 'INTERNAL' %}bg-light{% endif %}">
+        <span class="badge {% if n.visibility == 'INTERNAL' %}text-bg-secondary{% else %}text-bg-primary{% endif %}">{% if n.visibility == 'INTERNAL' %}Nội bộ{% else %}Gửi khách hàng{% endif %}</span>
+        <div class="mt-1">{{ n.text }}</div>
+        <div class="small text-muted">{{ n.author }} · {{ n.date|date:"d/m/Y" }}</div>
+      </div>
+    {% empty %}
+      <p class="text-muted small">Chưa có ghi chú.</p>
+    {% endfor %}
+    {% if case.supplements %}
+      <h3 class="h6 mt-3">Yêu cầu bổ sung</h3>
+      <ul class="small">{% for s in case.supplements %}<li>{{ s.created|date:"d/m/Y" }} – {{ s.text }} <span class="badge {% if s.status == 'OPEN' %}text-bg-warning{% else %}text-bg-success{% endif %}">{% if s.status == 'OPEN' %}Đang mở{% else %}Đã xử lý{% endif %}</span></li>{% endfor %}</ul>
+    {% endif %}
+    <div class="mt-3">
+      <label class="form-label" for="note-text">Ghi chú mới</label>
+      <textarea class="form-control mb-2" id="note-text" rows="2"></textarea>
+      <div class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="form-check"><input class="form-check-input" type="radio" name="vis" id="vis-int" checked><label class="form-check-label" for="vis-int">Nội bộ (khách không thấy)</label></div>
+        <div class="form-check"><input class="form-check-input" type="radio" name="vis" id="vis-cus"><label class="form-check-label" for="vis-cus">Gửi khách hàng</label></div>
+        <button class="btn btn-sm btn-primary" data-demo-action="Thêm ghi chú">Thêm ghi chú</button>
+      </div>
+    </div>
+  </div>
+
+  {# 6. Tài chính – chỉ khi có quyền #}
+  {% if can_view_finance %}
+  <div class="tab-pane fade{% if t == 'tai-chinh' %} show active{% endif %}" id="tab-tai-chinh" role="tabpanel">
+    <div class="row g-2 mb-3 text-center">
+      <div class="col-4"><div class="border rounded p-2"><div class="small text-muted">Phải thu</div><div class="fw-bold">{{ case.finance_total|vnd }} đ</div></div></div>
+      <div class="col-4"><div class="border rounded p-2"><div class="small text-muted">Đã thu</div><div class="fw-bold text-success">{{ case.finance_collected|vnd }} đ</div></div></div>
+      <div class="col-4"><div class="border rounded p-2"><div class="small text-muted">Còn nợ</div><div class="fw-bold text-danger">{{ case.finance_outstanding|vnd }} đ</div></div></div>
+    </div>
+    <div class="table-responsive"><table class="table table-sm align-middle">
+      <thead><tr><th>Khoản phí</th><th class="text-end">Phải thu</th><th class="text-end">Đã thu</th><th class="text-end">Còn nợ</th><th>Hạn</th></tr></thead>
+      <tbody>
+        {% for r in case.receivables %}
+        <tr><td>{{ r.fee }}</td><td class="text-end">{{ r.amount|vnd }}</td><td class="text-end">{{ r.collected|vnd }}</td><td class="text-end">{{ r.outstanding|vnd }}</td><td>{{ r.due_date|date:"d/m/Y" }}</td></tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-muted">Chưa có khoản phải thu.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+    <div class="d-flex flex-wrap gap-2">
+      <button class="btn btn-sm btn-outline-primary" data-demo-action="Thêm khoản phải thu">+ Khoản phải thu</button>
+      <button class="btn btn-sm btn-outline-success" data-demo-action="Ghi nhận đã thu">+ Ghi nhận đã thu</button>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endwith %}
+
+{# Màn hình 7: hộp thoại xác nhận Mẫu 4 "đúng hồ sơ" #}
+<div class="modal fade" id="form4Modal" tabindex="-1" aria-labelledby="form4Title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title h5" id="form4Title">Xác nhận Mẫu 4 "đúng hồ sơ"</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+    </div>
+    <div class="modal-body">
+      <p class="small text-muted">Kiểm tra kỹ: Mẫu 4 phải thuộc đúng hồ sơ và đúng phiên bản bản thảo đã duyệt.</p>
+      <dl class="row small mb-3">
+        <dt class="col-5">Mã hồ sơ</dt><dd class="col-7 font-monospace">{{ case.display_code }}</dd>
+        <dt class="col-5">Tên sách</dt><dd class="col-7">{{ case.title }}</dd>
+        <dt class="col-5">Bản thảo được duyệt</dt><dd class="col-7">{% if case.latest_manuscript %}Phiên bản {{ case.latest_manuscript.version }} – {{ case.latest_manuscript.filename }} ({{ case.latest_manuscript.uploaded_at|date:"d/m/Y" }}){% else %}Chưa có bản thảo{% endif %}</dd>
+      </dl>
+      {% include "demo/_fake_upload.html" with bar_id="up-form4" label="Tệp Mẫu 4 đã ký" hint="" %}
+      <label class="form-label" for="form4-result">Kết quả duyệt <span class="text-danger">*</span></label>
+      <select class="form-select mb-3" id="form4-result">
+        <option value="">– Chọn kết quả –</option>
+        {% for value, label in review_results %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select>
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="form4-confirm">
+        <label class="form-check-label" for="form4-confirm">Tôi xác nhận Mẫu 4 này đúng hồ sơ <strong>{{ case.display_code }}</strong> và đúng bản thảo phiên bản {{ case.latest_manuscript.version|default:"–" }}.</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+      <button type="button" class="btn btn-primary" id="form4-submit" disabled data-demo-action="Xác nhận Mẫu 4 và chuyển trạng thái theo kết quả">Xác nhận</button>
+    </div>
+  </div></div>
+</div>
+{% endblock %}
+
+{% block demo_scripts %}
+<script>
+  (function () {
+    var result = document.getElementById("form4-result");
+    var confirmBox = document.getElementById("form4-confirm");
+    var submit = document.getElementById("form4-submit");
+    function sync() { submit.disabled = !(result.value && confirmBox.checked); }
+    result.addEventListener("change", sync);
+    confirmBox.addEventListener("change", sync);
+    {% if open_form4 and case.status == "EDITING" %}
+    document.addEventListener("DOMContentLoaded", function () {
+      bootstrap.Modal.getOrCreateInstance(document.getElementById("form4Modal")).show();
+    });
+    {% endif %}
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+<p class="text-muted">Hồ sơ nhóm theo việc biên tập viên cần làm tiếp.</p>
+<div class="row g-3">
+  {% for group in groups %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">{{ group.title }}</span>
+        <span class="badge rounded-pill text-bg-{% if group.cases %}danger{% else %}secondary{% endif %}">{{ group.cases|length }}</span>
+      </div>
+      <div class="card-body pb-0"><p class="small text-muted">{{ group.hint }}</p></div>
+      <div class="list-group list-group-flush">
+        {% for case in group.cases %}
+        <a class="list-group-item list-group-item-action" href="{% url 'demo:editor_case_detail' case.slug %}">
+          <div class="d-flex justify-content-between gap-2"><span class="small font-monospace text-muted">{{ case.display_code }}</span>{% include "demo/_status_badge.html" %}</div>
+          <div>{{ case.title }}</div>
+          <div class="small text-muted">{{ case.owner }}{% if case.editor %} · BTV {{ case.editor }}{% endif %}</div>
+        </a>
+        {% empty %}
+        <div class="list-group-item text-muted small">Không có hồ sơ.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

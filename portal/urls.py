@@ -14,5 +14,6 @@ urlpatterns = [
     path("bao-cao/", include("apps.reports.urls")),
     path("tai-chinh/", include("apps.finance.urls")),
     path("quan-tri/", include("apps.administration.urls")),
+    path("demo/", include("apps.demo.urls")),
     path("", include("apps.public_site.urls")),
 ]

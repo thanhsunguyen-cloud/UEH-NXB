@@ -1,0 +1,9 @@
+<ul class="list-unstyled demo-timeline mb-0">
+  {% for h in case.history %}
+  <li class="mb-3">
+    <div class="fw-semibold">{% if customer %}{{ h.customer_label }}{% else %}{{ h.label }}{% endif %}</div>
+    <div class="small text-muted">{{ h.date|date:"d/m/Y" }} · {{ h.actor }}</div>
+    {% if h.note %}<div class="small">{{ h.note }}</div>{% endif %}
+  </li>
+  {% endfor %}
+</ul>

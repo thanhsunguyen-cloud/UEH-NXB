@@ -1,0 +1,105 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+{# Thanh bước #}
+<ol class="list-unstyled d-flex flex-wrap gap-2 mb-4">
+  {% for num, label in steps %}
+  <li>
+    <a class="btn btn-sm {% if num == step %}btn-primary{% elif num < step %}btn-outline-primary{% else %}btn-outline-secondary{% endif %}"
+       href="?buoc={{ num }}&hinh_thuc={{ mode }}"{% if num == step %} aria-current="step"{% endif %}>
+      Bước {{ num }}. {{ label }}
+    </a>
+  </li>
+  {% endfor %}
+</ol>
+
+<div class="card shadow-sm"><div class="card-body">
+{% if step == 1 %}
+  <form method="get" id="step1">
+    <input type="hidden" name="buoc" value="2">
+    <h2 class="h5 mb-3">Bước 1. Thông tin tác phẩm</h2>
+    <div class="row g-3">
+      <div class="col-12 col-md-8">
+        <label class="form-label" for="f-title">Tên sách <span class="text-danger">*</span></label>
+        <input class="form-control" id="f-title" value="Kinh tế học bên hiên nhà">
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="f-cat">Thể loại</label>
+        <select class="form-select" id="f-cat"><option>Sách tham khảo</option><option>Giáo trình</option><option>Sách chuyên khảo</option></select>
+      </div>
+      <div class="col-12">
+        <label class="form-label" for="f-sub">Tên phụ / phụ đề</label>
+        <input class="form-control" id="f-sub" placeholder="Không bắt buộc">
+      </div>
+      <div class="col-12">
+        <span class="form-label d-block">Hình thức xuất bản <span class="text-danger">*</span></span>
+        {% for value, label in modes %}
+        <div class="form-check form-check-inline">
+          <input class="form-check-input" type="radio" name="hinh_thuc" id="m-{{ value }}" value="{{ value }}"{% if value == mode %} checked{% endif %}>
+          <label class="form-check-label" for="m-{{ value }}">{{ label }}</label>
+        </div>
+        {% endfor %}
+        <div class="form-text">Liên kết: cần thêm tên đơn vị liên kết và Mẫu 1.</div>
+      </div>
+      <div class="col-12 col-md-8">
+        <label class="form-label" for="f-partner">Tên đơn vị liên kết (nếu liên kết)</label>
+        <input class="form-control" id="f-partner" placeholder="Ví dụ: Công ty Sách Bình Minh">
+      </div>
+    </div>
+    <div class="d-flex justify-content-end mt-4">
+      <button type="submit" class="btn btn-primary">Tiếp tục &rarr;</button>
+    </div>
+  </form>
+{% elif step == 2 %}
+  <h2 class="h5 mb-2">Bước 2. Danh sách tác giả</h2>
+  <div class="alert alert-info small">Chỉ <strong>người đại diện</strong> (bạn) có tài khoản trên cổng. Các tác giả khác chỉ ghi tên để in vào thư mục sách, <strong>không có tài khoản</strong> và không xem được hồ sơ.</div>
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead><tr><th style="width:5rem">Thứ tự</th><th>Họ tên</th><th>Vai trò</th><th>Tài khoản</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><input class="form-control form-control-sm" value="1" aria-label="Thứ tự"></td><td>Trần Thị Mai</td><td>Tác giả</td><td><span class="badge text-bg-success">Người đại diện</span></td><td></td></tr>
+        <tr><td><input class="form-control form-control-sm" value="2" aria-label="Thứ tự"></td><td>Vũ Đình Phong</td><td>Đồng tác giả</td><td><span class="text-muted small">Không có tài khoản</span></td><td><button class="btn btn-sm btn-outline-danger" data-demo-action="Xóa tác giả">Xóa</button></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-md-5"><label class="form-label small" for="a-name">Họ tên</label><input class="form-control" id="a-name"></div>
+    <div class="col-8 col-md-4"><label class="form-label small" for="a-role">Vai trò</label>
+      <select class="form-select" id="a-role"><option>Tác giả</option><option>Chủ biên</option><option>Đồng tác giả</option><option>Dịch giả</option><option>Biên soạn</option></select></div>
+    <div class="col-4 col-md-3"><button class="btn btn-outline-primary w-100" data-demo-action="Thêm tác giả">+ Thêm</button></div>
+  </div>
+{% elif step == 3 %}
+  <h2 class="h5 mb-3">Bước 3. Tải tài liệu</h2>
+  <p class="small text-muted">Hình thức: <strong>{% if linked %}Liên kết{% else %}Tự xuất bản{% endif %}</strong>{% if not linked %} – không cần Mẫu 1.{% endif %}</p>
+  {% for code, label, hint in uploads %}
+    {% include "demo/_fake_upload.html" with bar_id="up-"|add:code label=label hint=hint %}
+  {% endfor %}
+{% else %}
+  <h2 class="h5 mb-3">Bước 4. Xem lại và nộp</h2>
+  <dl class="row small">
+    <dt class="col-sm-4">Tên sách</dt><dd class="col-sm-8">Kinh tế học bên hiên nhà</dd>
+    <dt class="col-sm-4">Hình thức</dt><dd class="col-sm-8">{% if linked %}Liên kết{% else %}Tự xuất bản{% endif %}</dd>
+    <dt class="col-sm-4">Tác giả</dt><dd class="col-sm-8">1. Trần Thị Mai (Tác giả, người đại diện) · 2. Vũ Đình Phong (Đồng tác giả)</dd>
+    <dt class="col-sm-4">Tài liệu</dt><dd class="col-sm-8">Bản thảo v1, Mẫu 2 v1</dd>
+  </dl>
+  <div class="alert alert-warning">
+    <div class="fw-semibold mb-1">Còn thiếu trước khi nộp:</div>
+    <ul class="mb-0">{% for item in missing %}<li>{{ item }}</li>{% endfor %}</ul>
+  </div>
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="commit">
+    <label class="form-check-label" for="commit">Tôi cam đoan thông tin và tài liệu đã nộp là đúng.</label>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-outline-secondary" data-demo-action="Lưu nháp">Lưu nháp</button>
+    <button class="btn btn-primary" data-demo-action="Nộp hồ sơ (bản thật sẽ chặn nộp khi còn thiếu điều kiện)">Nộp hồ sơ</button>
+  </div>
+{% endif %}
+
+{% if step > 1 %}
+  <div class="d-flex justify-content-between mt-4">
+    <a class="btn btn-outline-secondary" href="?buoc={{ prev_step }}&hinh_thuc={{ mode }}">&larr; Quay lại</a>
+    {% if next_step %}<a class="btn btn-primary" href="?buoc={{ next_step }}&hinh_thuc={{ mode }}">Tiếp tục &rarr;</a>{% endif %}
+  </div>
+{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+<form class="card card-body shadow-sm mb-3" method="get"
+      hx-get="{% url 'demo:editor_cases' %}" hx-target="#case-table" hx-trigger="submit, change, input changed delay:300ms from:#f-q" hx-push-url="true">
+  <div class="row g-2 align-items-end">
+    <div class="col-12 col-lg-4">
+      <label class="form-label small" for="f-q">Tìm kiếm</label>
+      <input class="form-control" type="search" name="q" id="f-q" value="{{ q }}" placeholder="ISBN, mã NXB, tên sách, tác giả">
+    </div>
+    <div class="col-6 col-lg-3">
+      <label class="form-label small" for="f-status">Trạng thái</label>
+      <select class="form-select" name="trang_thai" id="f-status">
+        <option value="">Tất cả</option>
+        {% for value, label in statuses %}<option value="{{ value }}"{% if value == selected_status %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-lg-2">
+      <label class="form-label small" for="f-mode">Hình thức</label>
+      <select class="form-select" name="hinh_thuc" id="f-mode">
+        <option value="">Tất cả</option>
+        {% for value, label in modes %}<option value="{{ value }}"{% if value == selected_mode %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-8 col-lg-2">
+      <label class="form-label small" for="f-editor">BTV phụ trách</label>
+      <select class="form-select" name="btv" id="f-editor">
+        <option value="">Tất cả</option>
+        {% for value, label in editors %}<option value="{{ value }}"{% if value == selected_editor %} selected{% endif %}>{{ label }}</option>{% endfor %}
+        <option value="chua-phan-cong"{% if selected_editor == "chua-phan-cong" %} selected{% endif %}>Chưa phân công</option>
+      </select>
+    </div>
+    <div class="col-4 col-lg-1"><button class="btn btn-primary w-100" type="submit">Lọc</button></div>
+  </div>
+</form>
+<div id="case-table">{% include "demo/_editor_case_table.html" %}</div>
+{% endblock %}

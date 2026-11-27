@@ -1,0 +1,49 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+<form class="card card-body shadow-sm mb-3" method="get">
+  <div class="row g-2 align-items-end">
+    <div class="col-6 col-md-3">
+      <label class="form-label small" for="f-year">Năm</label>
+      <select class="form-select" name="nam" id="f-year">
+        {% for y in years %}<option value="{{ y }}"{% if y == year %} selected{% endif %}>{{ y }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-6 col-md-3">
+      <label class="form-label small" for="f-quarter">Kỳ</label>
+      <select class="form-select" name="quy" id="f-quarter">
+        <option value="">Cả năm</option>
+        {% for q in "1234" %}<option value="{{ q }}"{% if q == quarter %} selected{% endif %}>Quý {{ q }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-md-3"><button class="btn btn-primary w-100" type="submit">Xem thống kê</button></div>
+    <div class="col-12 col-md-3"><button class="btn btn-outline-secondary w-100" type="button" data-demo-action="Xuất danh mục ra Excel">Xuất Excel</button></div>
+  </div>
+</form>
+
+<div class="card shadow-sm mb-3"><div class="card-body">
+  <h2 class="h6">Số đầu sách có quyết định xuất bản theo tháng – {% if quarter %}Quý {{ quarter }}/{% endif %}{{ year }}</h2>
+  <div class="demo-bar mt-3" role="img" aria-label="Biểu đồ cột số đầu sách theo tháng">
+    {% for c in chart %}
+    <div class="demo-bar-col">
+      <div class="small fw-semibold">{{ c.count }}</div>
+      <div class="demo-bar-fill" style="height:{{ c.height }}%" title="Tháng {{ c.month }}: {{ c.count }} đầu sách"></div>
+      <div class="small text-muted border-top w-100 text-center">T{{ c.month }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div></div>
+
+<div class="table-responsive bg-white rounded shadow-sm">
+  <table class="table table-sm align-middle mb-0">
+    <thead class="table-light"><tr><th>#</th><th>ISBN</th><th>Tên sách</th><th>Tác giả</th><th>Hình thức</th><th>Ngày QĐXB</th></tr></thead>
+    <tbody>
+      {% for b in books %}
+      <tr><td>{{ forloop.counter }}</td><td class="font-monospace small">{{ b.isbn }}</td><td>{{ b.title }}</td><td class="small">{{ b.author }}</td><td class="small">{{ b.mode_label }}</td><td>{{ b.decision_date|date:"d/m/Y" }}</td></tr>
+      {% empty %}
+      <tr><td colspan="6" class="text-center text-muted py-3">Không có đầu sách trong kỳ này.</td></tr>
+      {% endfor %}
+    </tbody>
+    <tfoot><tr><th colspan="6" class="small">Tổng: {{ books|length }} đầu sách</th></tr></tfoot>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+  <p class="text-muted mb-0">Các hồ sơ (mỗi hồ sơ là một đầu sách) bạn đứng tên người đại diện.</p>
+  <a class="btn btn-primary" href="{% url 'demo:customer_create' %}">+ Tạo hồ sơ mới</a>
+</div>
+<div class="row g-3">
+  {% for case in cases %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+          <span class="small text-muted font-monospace">{{ case.display_code }}</span>
+          {% include "demo/_status_badge.html" with customer=True %}
+        </div>
+        <h2 class="h6 card-title">{{ case.title }}</h2>
+        <div class="small text-muted mb-2">{{ case.mode_label }} · Tạo ngày {{ case.created|date:"d/m/Y" }}</div>
+        {% if case.todo %}
+          <div class="alert alert-warning py-2 px-3 small mb-0"><strong>Việc cần làm:</strong> {{ case.todo }}</div>
+        {% else %}
+          <div class="small text-success">Không có việc cần làm – NXB đang xử lý.</div>
+        {% endif %}
+      </div>
+      <div class="card-footer bg-white border-0 pt-0">
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'demo:customer_case_detail' case.slug %}">Xem chi tiết</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

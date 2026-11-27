@@ -1,0 +1,21 @@
+{% extends "demo/_layout.html" %}
+{% block demo_content %}
+<p class="text-muted">Bản demo để biên tập viên bấm thử màn hình Cổng khách hàng (M2) và Tác nghiệp (M3) trước khi viết thật. Dữ liệu hư cấu, không có gì được lưu. Hướng dẫn và câu hỏi góp ý: <code>docs/DEMO_HUONG_DAN.md</code>.</p>
+<div class="row g-4">
+  {% for group in screens %}
+  <div class="col-12 col-lg-6">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header fw-semibold">{{ group.role }}</div>
+      <div class="list-group list-group-flush">
+        {% for item in group.items %}
+        <a class="list-group-item list-group-item-action" href="{{ item.url }}">
+          <div class="fw-semibold">{{ item.title }}</div>
+          <div class="small text-muted">{{ item.description }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

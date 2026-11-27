@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% comment %}
+  Khung chung bản demo M2/M3: dải cảnh báo cố định + thanh chuyển màn hình theo vai trò.
+  Toàn bộ dữ liệu là giả (apps/demo/fake_data.py); mọi nút chỉ chuyển trang hoặc mở hộp thoại.
+{% endcomment %}
+{% block title %}[DEMO] {{ screen_title }}{% endblock %}
+{% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block content %}
+<style>
+  .demo-banner { top:0; z-index:1030; letter-spacing:.02em; }
+  .demo-bar { display:flex; align-items:flex-end; gap:.5rem; height:180px; }
+  .demo-bar-col { flex:1 1 0; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; height:100%; min-width:0; }
+  .demo-bar-fill { width:70%; background:#005F69; border-radius:.25rem .25rem 0 0; min-height:2px; }
+  .demo-timeline { border-left:3px solid #dee2e6; padding-left:1rem; }
+  .demo-timeline li { position:relative; }
+  .demo-timeline li::before { content:""; position:absolute; left:-1.45rem; top:.35rem; width:.75rem; height:.75rem; border-radius:50%; background:#005F69; }
+</style>
+<div class="demo-banner sticky-top alert alert-danger text-center fw-bold py-2 mb-3 shadow-sm" role="alert">
+  BẢN DEMO – DỮ LIỆU GIẢ – THAO TÁC KHÔNG ĐƯỢC LƯU
+</div>
+
+<nav class="d-flex flex-wrap align-items-center gap-2 mb-3 small" aria-label="Chuyển màn hình demo">
+  <a class="btn btn-sm btn-outline-secondary" href="{% url 'demo:index' %}">&larr; Danh sách màn hình</a>
+  {% if demo_role == "customer" %}
+    <span class="badge text-bg-light border">Đang xem với vai trò: Khách hàng – {{ demo_customer_name }}</span>
+    <a class="btn btn-sm btn-link" href="{% url 'demo:customer_cases' %}">Hồ sơ của tôi</a>
+    <a class="btn btn-sm btn-link" href="{% url 'demo:customer_create' %}">Tạo hồ sơ</a>
+  {% elif demo_role == "editor" %}
+    <span class="badge text-bg-light border">Đang xem với vai trò: Biên tập viên</span>
+    <a class="btn btn-sm btn-link" href="{% url 'demo:editor_cases' %}">Danh sách hồ sơ</a>
+    <a class="btn btn-sm btn-link" href="{% url 'demo:editor_queue' %}">Cần xử lý</a>
+    <a class="btn btn-sm btn-link" href="{% url 'demo:stats_catalog' %}">Danh mục xuất bản</a>
+    <a class="btn btn-sm btn-link" href="{% url 'demo:stats_debt' %}">Công nợ</a>
+  {% endif %}
+</nav>
+
+<h1 class="h4 mb-3">{{ screen_title }}</h1>
+{% block demo_content %}{% endblock %}
+
+{# Hộp thoại dùng chung cho mọi nút "giả": thông báo thao tác không được lưu. #}
+<div class="modal fade" id="demoNotSaved" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5">Bản demo</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-0" id="demoNotSavedText">Đây là bản demo: thao tác này <strong>không được lưu</strong>. Trong phiên bản thật, hệ thống sẽ thực hiện và ghi nhật ký.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Đã hiểu</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Nút có data-demo-action="Mô tả" -> mở hộp thoại "không được lưu".
+  document.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-demo-action]");
+    if (!btn) return;
+    event.preventDefault();
+    var text = document.getElementById("demoNotSavedText");
+    text.innerHTML = "<strong>" + btn.getAttribute("data-demo-action").replace(/</g, "&lt;") +
+      "</strong><br>Đây là bản demo: thao tác này <strong>không được lưu</strong>.";
+    var notSaved = bootstrap.Modal.getOrCreateInstance(document.getElementById("demoNotSaved"));
+    var open = document.querySelector(".modal.show");
+    if (open && open.id !== "demoNotSaved") {
+      open.addEventListener("hidden.bs.modal", function () { notSaved.show(); }, { once: true });
+      bootstrap.Modal.getOrCreateInstance(open).hide();
+    } else {
+      notSaved.show();
+    }
+  });
+  // Thanh tiến trình giả: nút có data-demo-upload="id-thanh".
+  document.addEventListener("click", function (event) {
+    var btn = event.target.closest("[data-demo-upload]");
+    if (!btn) return;
+    event.preventDefault();
+    var bar = document.getElementById(btn.getAttribute("data-demo-upload"));
+    if (!bar) return;
+    var label = bar.parentElement.parentElement.querySelector("[data-demo-upload-status]");
+    var pct = 0;
+    btn.disabled = true;
+    var timer = setInterval(function () {
+      pct = Math.min(pct + 12 + Math.floor(Math.random() * 10), 100);
+      bar.style.width = pct + "%";
+      bar.textContent = pct + "%";
+      bar.setAttribute("aria-valuenow", pct);
+      if (pct >= 100) {
+        clearInterval(timer);
+        bar.classList.remove("progress-bar-animated");
+        bar.classList.add("bg-success");
+        if (label) label.textContent = "Đã tải lên (giả lập – không lưu)";
+        btn.disabled = false;
+      }
+    }, 250);
+  });
+</script>
+{% block demo_scripts %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,14 @@
+{% comment %}Ô tải tệp giả lập (không có <input type="file">, không gửi tệp). Tham số: bar_id, label, hint.{% endcomment %}
+<div class="border rounded p-3 mb-3 bg-white">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div>
+      <div class="fw-semibold">{{ label }}</div>
+      {% if hint %}<div class="small text-muted">{{ hint }}</div>{% endif %}
+    </div>
+    <button type="button" class="btn btn-sm btn-outline-primary" data-demo-upload="{{ bar_id }}">Chọn tệp và tải lên</button>
+  </div>
+  <div class="progress mt-2" role="progressbar" aria-label="Tiến trình tải {{ label }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" id="{{ bar_id }}" style="width:0%"></div>
+  </div>
+  <div class="small text-muted mt-1" data-demo-upload-status>Chưa tải tệp. Hệ thống thật tải chia phần 8 MiB.</div>
+</div>
