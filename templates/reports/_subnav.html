@@ -1,0 +1,6 @@
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item"><a class="nav-link{% if active == 'search' %} active{% endif %}" href="{% url 'reports:search' %}">Tra cứu</a></li>
+  <li class="nav-item"><a class="nav-link{% if active == 'stats' %} active{% endif %}" href="{% url 'reports:catalog_stats' %}">Danh mục xuất bản</a></li>
+  <li class="nav-item"><a class="nav-link{% if active == 'import' %} active{% endif %}" href="{% url 'reports:import' %}">Nhập Excel</a></li>
+  <li class="nav-item"><a class="nav-link{% if active == 'history' %} active{% endif %}" href="{% url 'reports:import_history' %}">Lịch sử nhập</a></li>
+</ul>

@@ -1,24 +1,22 @@
-"""Module M5 — Tra cứu và thống kê danh mục xuất bản (trang khung placeholder M0)."""
+"""Định tuyến M5 — Tra cứu, thống kê danh mục xuất bản, nhập Excel dữ liệu cũ."""
 
 from django.urls import path
-from django.views.generic import TemplateView
 
-from apps.core.mixins import EditorRequiredMixin, PublicationStatsMixin
-
-
-class ReportsSearchView(EditorRequiredMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Tra cứu hồ sơ xuất bản", "module_code": "M5"}
-
-
-class ReportsCatalogStatsView(PublicationStatsMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Thống kê — Danh mục xuất bản", "module_code": "M5"}
-
+from . import views
 
 app_name = "reports"
 
 urlpatterns = [
-    path("tra-cuu/", ReportsSearchView.as_view(), name="search"),
-    path("danh-muc-xuat-ban/", ReportsCatalogStatsView.as_view(), name="catalog_stats"),
+    path("tra-cuu/", views.ReportsSearchView.as_view(), name="search"),
+    path("danh-muc-xuat-ban/", views.ReportsCatalogStatsView.as_view(), name="catalog_stats"),
+    path(
+        "danh-muc-xuat-ban/xuat-excel/",
+        views.ReportsCatalogExportView.as_view(),
+        name="catalog_export",
+    ),
+    path("nhap-excel/", views.ImportView.as_view(), name="import"),
+    path(
+        "nhap-excel/file-mau/", views.ImportTemplateDownloadView.as_view(), name="import_template"
+    ),
+    path("nhap-excel/lich-su/", views.ImportHistoryView.as_view(), name="import_history"),
 ]
