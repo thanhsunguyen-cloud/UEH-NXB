@@ -31,7 +31,7 @@ Kế thừa `CustomerRequiredMixin` + `CaseAccessMixin` (404 nếu không phải
 5. **Yêu cầu bổ sung** (`SupplementRequest`): hiện các yêu cầu OPEN nổi bật đầu trang. Khi khách nộp lại thành công từ NEED_SUPPLEMENT → SUBMITTED, đánh dấu mọi yêu cầu OPEN của hồ sơ thành RESOLVED (`resolved_at=now`) và ghi `log_event(action="case.supplement_resolved")`.
 6. **Bản thảo chỉnh sửa** (REVISION_REQUIRED): ô tải bản thảo mới + dòng nhắc "Sau khi tải bản mới, NXB sẽ tiếp tục biên tập". Khách không chuyển trạng thái ở bước này.
 7. **Trao đổi với NXB**: hiện ghi chú qua `can_view_note` (chỉ `visibility=CUSTOMER`). Khách gửi ghi chú mới → tạo `CaseNote(visibility=CUSTOMER, author=user)`, ghi `log_event(action="case.note_add")`. Không bao giờ hiện ghi chú INTERNAL.
-8. **Dòng thời gian**: `StatusHistory` của hồ sơ (thời điểm, trạng thái mới theo nhãn khách hàng). **Không hiện** `note` của StatusHistory (có thể là ghi chú nội bộ), trừ khi chuyển sang NEED_SUPPLEMENT (ghi chú đó là yêu cầu gửi khách).
+8. **Dòng thời gian**: `StatusHistory` của hồ sơ (thời điểm, trạng thái mới theo nhãn khách hàng). Chỉ hiện `note` của StatusHistory khi trạng thái mới là NEED_SUPPLEMENT, REVISION_REQUIRED hoặc REJECTED (đây là các ghi chú gửi khách, M4 cũng đưa vào email); các trạng thái khác **không hiện** `note`.
 9. Không hiện bất kỳ số liệu tài chính nào.
 
 ### 2.4 Hủy hồ sơ nháp

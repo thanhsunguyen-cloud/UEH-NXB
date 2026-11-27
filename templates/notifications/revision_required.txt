@@ -1,0 +1,14 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+Bản thảo của Quý khách cần được chỉnh sửa trước khi NXB tiếp tục biên tập.{% if note %}
+
+Nội dung cần chỉnh sửa:
+{{ note }}{% endif %}
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+Vui lòng đăng nhập Portal để tải lên bản thảo đã chỉnh sửa.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

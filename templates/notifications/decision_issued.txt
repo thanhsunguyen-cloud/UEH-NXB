@@ -1,0 +1,11 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+NXB Kinh tế TP.HCM đã ban hành quyết định xuất bản cho tác phẩm của Quý khách.
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+Quý khách có thể xem thông tin chi tiết trên Portal.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

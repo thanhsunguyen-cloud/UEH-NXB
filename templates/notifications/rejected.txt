@@ -1,0 +1,14 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+Rất tiếc, hồ sơ của Quý khách không được NXB chấp nhận.{% if note %}
+
+Lý do:
+{{ note }}{% endif %}
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+Nếu cần trao đổi thêm, Quý khách vui lòng liên hệ NXB.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

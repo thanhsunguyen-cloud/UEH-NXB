@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Kính gửi {{ recipient_name }},</p>
+<p>{% if is_resubmission %}Người đại diện đã bổ sung và nộp lại hồ sơ{% else %}Có hồ sơ mới vừa được nộp{% endif %}, cần biên tập viên xem xét.</p>
+<ul>
+  <li>Tên sách: {{ title }}</li>
+  <li>Mã hồ sơ: {{ display_code }}</li>
+  <li>Người đại diện: {{ owner_name }}</li>
+  <li>Trạng thái hiện tại: {{ status_label }}</li>
+</ul>
+<p>Vui lòng mở hồ sơ trên Portal để kiểm tra và xử lý.</p>
+<p><a href="{{ case_url }}">Mở hồ sơ trên Portal</a></p>
+{% include "notifications/_footer.html" %}
+</body>
+</html>

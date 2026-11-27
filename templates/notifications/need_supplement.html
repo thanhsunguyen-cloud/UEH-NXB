@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Kính gửi {{ recipient_name }},</p>
+<p>NXB Kinh tế TP.HCM đã xem hồ sơ và đề nghị Quý khách bổ sung thêm thông tin, tài liệu.</p>{% if note %}
+<p><strong>Nội dung yêu cầu bổ sung:</strong></p>
+<p>{{ note|linebreaksbr }}</p>{% endif %}
+<ul>
+  <li>Tên sách: {{ title }}</li>
+  <li>Mã hồ sơ: {{ display_code }}</li>
+  <li>Trạng thái hiện tại: {{ status_label }}</li>
+</ul>
+<p>Vui lòng đăng nhập Portal để bổ sung và nộp lại hồ sơ.</p>
+<p><a href="{{ case_url }}">Mở hồ sơ trên Portal</a></p>
+{% include "notifications/_footer.html" %}
+</body>
+</html>
