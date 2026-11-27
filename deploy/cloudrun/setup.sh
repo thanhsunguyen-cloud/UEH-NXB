@@ -71,7 +71,7 @@ ok "Dự án: $PROJECT_ID – vùng: $REGION"
 
 say "2/8 Bật các dịch vụ Google Cloud cần dùng (lần đầu mất 1–2 phút)"
 gcloud services enable run.googleapis.com sqladmin.googleapis.com secretmanager.googleapis.com \
-  cloudbuild.googleapis.com artifactregistry.googleapis.com drive.googleapis.com iam.googleapis.com
+  cloudbuild.googleapis.com artifactregistry.googleapis.com storage.googleapis.com drive.googleapis.com iam.googleapis.com
 ok "Đã bật"
 
 say "3/8 Tài khoản máy (service account) của Portal"
@@ -157,6 +157,7 @@ if [ -n "$GDRIVE_SHARED_DRIVE_ID" ] && ! secret_exists GDRIVE_KEY; then
 fi
 
 say "8/8 Đóng gói và chạy Portal trên Cloud Run (5–10 phút)"
+VOLUME_ARGS=()
 ENV_VARS="DJANGO_SETTINGS_MODULE=portal.settings.prod,DJANGO_DEBUG=False"
 ENV_VARS+=",ALLOWED_HOSTS=.run.app,CSRF_TRUSTED_ORIGINS=https://*.run.app"
 ENV_VARS+=",DEFAULT_FROM_EMAIL=nxbkt@ueh.edu.vn,STAFF_GOOGLE_DOMAIN=ueh.edu.vn"
@@ -168,15 +169,30 @@ if [ -n "$GDRIVE_SHARED_DRIVE_ID" ]; then
   ENV_VARS+=",GDRIVE_CREDENTIALS_FILE=/secrets/gdrive/key.json"
   SECRETS+=",/secrets/gdrive/key.json=GDRIVE_KEY:latest"
 else
-  ENV_VARS+=",FILE_STORAGE_BACKEND=local,MEDIA_ROOT=/tmp/media"
-  warn "Chưa có Shared Drive: tài liệu tải lên chỉ lưu tạm và SẼ MẤT khi máy chủ khởi động lại."
+  # Chưa có Shared Drive: lưu tài liệu vào kho Cloud Storage của dự án, gắn vào Portal như một thư mục.
+  BUCKET="${PROJECT_ID}-tai-lieu"
+  if ! gcloud storage buckets describe "gs://${BUCKET}" >/dev/null 2>&1; then
+    gcloud storage buckets create "gs://${BUCKET}" --location "$REGION" \
+      --uniform-bucket-level-access --public-access-prevention >/dev/null
+  fi
+  gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
+    --member "serviceAccount:$RUN_SA" --role roles/storage.objectUser >/dev/null
+  ENV_VARS+=",FILE_STORAGE_BACKEND=local,MEDIA_ROOT=/app/media"
+  MAX_INSTANCES=1
+  if ! gcloud run services describe "$SERVICE" --region "$REGION" \
+      --format='value(spec.template.spec.volumes[].name)' 2>/dev/null | grep -qw tailieu; then
+    VOLUME_ARGS=(--add-volume "name=tailieu,type=cloud-storage,bucket=${BUCKET},mount-options=implicit-dirs;metadata-cache-ttl-secs=0"
+      --add-volume-mount "volume=tailieu,mount-path=/app/media")
+  fi
+  ok "Tài liệu lưu trong kho Cloud Storage: ${BUCKET}"
 fi
 ADMIN_VAR="BOOTSTRAP_ADMIN_EMAILS=${ADMIN_EMAILS}"
+: "${MAX_INSTANCES:=2}"
 cd "$(dirname "$0")/../.."
 gcloud run deploy "$SERVICE" --source . --quiet --region "$REGION" --service-account "$RUN_SA" \
   --add-cloudsql-instances "$CONN_NAME" --allow-unauthenticated \
-  --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 --timeout 300 \
-  --set-env-vars "^|^${ENV_VARS//,/|}|${ADMIN_VAR}" --set-secrets "$SECRETS"
+  --memory 1Gi --cpu 1 --min-instances 0 --max-instances "$MAX_INSTANCES" --timeout 300 \
+  --set-env-vars "^|^${ENV_VARS//,/|}|${ADMIN_VAR}" --set-secrets "$SECRETS" "${VOLUME_ARGS[@]}"
 IMAGE="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(spec.template.spec.containers[0].image)')"
 
 # Cloud Run Job dùng để chạy lệnh quản trị (tạo Admin, kiểm tra Drive)

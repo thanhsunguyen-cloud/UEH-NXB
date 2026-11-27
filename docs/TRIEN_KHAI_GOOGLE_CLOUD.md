@@ -24,7 +24,7 @@ Dành cho Owner, không cần biết lập trình. Làm lần lượt từ Phầ
 
 **B2. Ổ dùng chung (Shared Drive) để lưu tài liệu hồ sơ:**
 1. Vẫn bằng nxbkt@ueh.edu.vn, mở https://drive.google.com → mục **Bộ nhớ dùng chung (Shared drives)** → **Mới** → tên `Portal NXB – Tài liệu hồ sơ`.
-   - Nếu không có nút **Mới**: UEH chưa cho phép tạo → báo nhóm trưởng.
+   - Nếu menu trái không có **Bộ nhớ dùng chung**: UEH chưa bật tính năng này. Cứ để trống mã Shared Drive khi chạy lệnh – Portal tự lưu tài liệu vào kho Cloud Storage `<mã dự án>-tai-lieu` của dự án (an toàn, không mất khi khởi động lại); gửi đề nghị phòng CNTT và chuyển sang Shared Drive sau.
 2. Mở ổ vừa tạo. Địa chỉ trên trình duyệt có dạng `https://drive.google.com/drive/folders/0AbCdEf...` → phần sau `folders/` là **Mã Shared Drive**. Ghi lại.
 
 ## Phần C – Chạy lệnh triển khai lần 1
