@@ -1,0 +1,53 @@
+<div class="row g-4">
+  <div class="col-12 col-lg-7">
+    <h2 class="h6 fw-bold">Ghi chú</h2>
+    <form method="post" action="{% url 'backoffice:note_create' case.pk %}" class="row g-2 mb-3" id="note-form">
+      {% csrf_token %}
+      {% include "backoffice/_field.html" with field=note_form.body col="col-12" %}
+      {% include "backoffice/_field.html" with field=note_form.visibility col="col-12 col-sm-6" %}
+      <div class="col-12 col-sm-6 d-grid align-self-end"><button class="btn btn-primary btn-sm" type="submit">Thêm ghi chú</button></div>
+    </form>
+    <ul class="list-group">
+      {% for note in notes %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between small">
+            <span>
+              {% if note.visibility == "INTERNAL" %}<span class="badge text-bg-secondary">Nội bộ</span>{% else %}<span class="badge text-bg-primary">Gửi khách hàng</span>{% endif %}
+              <strong>{{ note.author.full_name|default:note.author.email }}</strong>
+            </span>
+            <span class="text-muted">{{ note.created_at|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div class="mt-1">{{ note.body|linebreaksbr }}</div>
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted small">Chưa có ghi chú.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="col-12 col-lg-5">
+    <h2 class="h6 fw-bold">Yêu cầu bổ sung</h2>
+    <ul class="list-group">
+      {% for sr in supplements %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between small">
+            <span>
+              {% if sr.status == "OPEN" %}<span class="badge text-bg-warning">Đang chờ bổ sung</span>{% else %}<span class="badge text-bg-success">Đã bổ sung</span>{% endif %}
+              {{ sr.requested_by.full_name|default:sr.requested_by.email }}
+            </span>
+            <span class="text-muted">{{ sr.created_at|date:"d/m/Y H:i" }}</span>
+          </div>
+          <div class="mt-1">{{ sr.message|linebreaksbr }}</div>
+          {% if sr.status == "OPEN" %}
+            <form method="post" action="{% url 'backoffice:supplement_resolve' case.pk sr.pk %}" class="mt-2">
+              {% csrf_token %}<button class="btn btn-outline-success btn-sm" type="submit">Đánh dấu đã bổ sung</button>
+            </form>
+          {% elif sr.resolved_at %}
+            <div class="small text-muted mt-1">Hoàn tất lúc {{ sr.resolved_at|date:"d/m/Y H:i" }}</div>
+          {% endif %}
+        </li>
+      {% empty %}
+        <li class="list-group-item text-muted small">Chưa có yêu cầu bổ sung.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>

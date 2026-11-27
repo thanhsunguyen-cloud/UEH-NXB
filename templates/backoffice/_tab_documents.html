@@ -1,0 +1,51 @@
+<div class="row g-4">
+  <div class="col-12 col-lg-8">
+    {% for group in doc_groups %}
+      <h2 class="h6 fw-bold mt-2">{{ group.label }}</h2>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead class="table-light"><tr><th>Phiên bản</th><th>Tên tệp</th><th>Người tải</th><th>Thời điểm</th><th>Ghi chú</th><th></th></tr></thead>
+          <tbody>
+            {% for doc in group.docs %}
+              <tr>
+                <td>v{{ doc.version }}{% if doc.form_code %} <span class="small text-muted">({{ doc.form_code }})</span>{% endif %}</td>
+                <td class="text-break">{{ doc.original_filename }} <span class="small text-muted">({{ doc.size_bytes|filesizeformat }})</span></td>
+                <td class="small">{{ doc.uploaded_by.full_name|default:doc.uploaded_by.email }}</td>
+                <td class="small text-nowrap">{{ doc.uploaded_at|date:"d/m/Y H:i" }}</td>
+                <td class="small">{{ doc.note|default:"—" }}</td>
+                <td class="text-end"><a class="btn btn-outline-secondary btn-sm" href="{% url 'core:document_download' doc.id %}">Tải về</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% empty %}
+      <p class="text-muted">Hồ sơ chưa có tài liệu.</p>
+    {% endfor %}
+  </div>
+  <div class="col-12 col-lg-4">
+    <h2 class="h6 fw-bold">Tải tài liệu lên</h2>
+    <label class="form-label small fw-semibold" for="bo-doc-type">Loại tài liệu</label>
+    <select id="bo-doc-type" class="form-select mb-2">
+      {% for value, label in doc_type_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+    </select>
+    <div id="bo-upload">
+      {% include "partials/chunked_upload.html" with case=case doc_type="MANUSCRIPT" form_code="" label="Chọn tệp" %}
+    </div>
+    <p class="small text-muted mt-3 mb-1">
+      Biểu mẫu công khai: <a href="/bieu-mau/" target="_blank" rel="noopener">trang Biểu mẫu</a>.
+      Mẫu nội bộ (Mẫu 4, 5, 6, 7, 9) lấy từ thư mục chung của NXB.
+    </p>
+  </div>
+</div>
+<script>
+(function () {
+  const select = document.getElementById("bo-doc-type");
+  const box = document.querySelector("#bo-upload .ueh-chunked-upload");
+  if (!select || !box) return;
+  select.addEventListener("change", function () { box.dataset.docType = select.value; });
+  box.addEventListener("ueh:upload-complete", function () {
+    window.location.href = "{% url 'backoffice:case_detail' case.pk %}?tab=documents";
+  });
+})();
+</script>

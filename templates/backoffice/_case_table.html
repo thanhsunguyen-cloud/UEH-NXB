@@ -1,0 +1,43 @@
+<div class="small text-muted mb-2">Tìm thấy {{ page_obj.paginator.count }} hồ sơ.</div>
+<div class="table-responsive bg-white border rounded">
+  <table class="table table-sm table-hover align-middle mb-0">
+    <thead class="table-light">
+      <tr>
+        <th>Mã hiển thị</th><th>Mã NXB</th><th>ISBN</th><th>Tên sách</th><th>Người đại diện</th>
+        <th>Hình thức</th><th>Trạng thái</th><th>BTV phụ trách</th><th>Cập nhật</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for case in cases %}
+        <tr>
+          <td class="text-nowrap"><a href="{% url 'backoffice:case_detail' case.pk %}">{{ case.display_code }}</a></td>
+          <td class="text-nowrap">{{ case.nxb_code|default:"—" }}</td>
+          <td class="text-nowrap">{{ case.isbn|default:"—" }}</td>
+          <td><a href="{% url 'backoffice:case_detail' case.pk %}" class="text-decoration-none">{{ case.title }}</a></td>
+          <td class="small">{{ case.owner.full_name|default:case.owner.email }}<br><span class="text-muted">{{ case.owner.email }}</span></td>
+          <td>{{ case.get_publication_mode_display }}</td>
+          <td>{% include "backoffice/_status_badge.html" %}</td>
+          <td class="small">{% if case.primary_editor %}{{ case.primary_editor.full_name|default:case.primary_editor.email }}{% else %}<span class="text-muted">Chưa giao</span>{% endif %}</td>
+          <td class="small text-nowrap">{{ case.updated_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9" class="text-center text-muted py-4">Không có hồ sơ phù hợp.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if page_obj.has_other_pages %}
+<nav aria-label="Phân trang" class="mt-3">
+  <ul class="pagination pagination-sm mb-0">
+    {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="{% querystring page=page_obj.previous_page_number %}"
+          hx-get="{% querystring page=page_obj.previous_page_number %}" hx-target="#case-results" hx-push-url="true">Trước</a></li>
+    {% endif %}
+    <li class="page-item disabled"><span class="page-link">Trang {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+    {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="{% querystring page=page_obj.next_page_number %}"
+          hx-get="{% querystring page=page_obj.next_page_number %}" hx-target="#case-results" hx-push-url="true">Sau</a></li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

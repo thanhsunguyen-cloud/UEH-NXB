@@ -1,40 +1,59 @@
-"""Module M3 — Cổng biên tập viên nội bộ (trang khung placeholder M0)."""
+"""URL của M3 — Tác nghiệp biên tập viên (`/noi-bo/`)."""
 
 from django.urls import path
-from django.views.generic import TemplateView
 
-from apps.core.mixins import CaseAccessMixin, EditorRequiredMixin
-
-
-class BackofficeHomeView(EditorRequiredMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Danh sách hồ sơ", "module_code": "M3"}
-
-
-class BackofficeQueueView(EditorRequiredMixin, TemplateView):
-    template_name = "placeholder.html"
-    extra_context = {"page_title": "Hồ sơ cần xử lý", "module_code": "M3"}
-
-
-class BackofficeCaseDetailView(EditorRequiredMixin, CaseAccessMixin, TemplateView):
-    template_name = "placeholder.html"
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx.update(
-            {
-                "page_title": f"Xử lý hồ sơ {self.case.display_code}",
-                "module_code": "M3",
-                "case": self.case,
-            }
-        )
-        return ctx
-
+from apps.backoffice import views
 
 app_name = "backoffice"
 
 urlpatterns = [
-    path("", BackofficeHomeView.as_view(), name="home"),
-    path("can-xu-ly/", BackofficeQueueView.as_view(), name="queue"),
-    path("ho-so/<uuid:case_id>/", BackofficeCaseDetailView.as_view(), name="case_detail"),
+    path("", views.BackofficeHomeView.as_view(), name="home"),
+    path("can-xu-ly/", views.BackofficeQueueView.as_view(), name="queue"),
+    path("ho-so/<uuid:case_id>/", views.BackofficeCaseDetailView.as_view(), name="case_detail"),
+    path("ho-so/<uuid:case_id>/cap-nhat/", views.CaseUpdateView.as_view(), name="case_update"),
+    path(
+        "ho-so/<uuid:case_id>/giao-btv/",
+        views.CaseAssignEditorView.as_view(),
+        name="case_assign_editor",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/doi-nguoi-dai-dien/",
+        views.CaseChangeOwnerView.as_view(),
+        name="case_change_owner",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/tac-gia/them/",
+        views.ContributorCreateView.as_view(),
+        name="contributor_create",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/tac-gia/<int:pk>/sua/",
+        views.ContributorUpdateView.as_view(),
+        name="contributor_update",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/tac-gia/<int:pk>/xoa/",
+        views.ContributorDeleteView.as_view(),
+        name="contributor_delete",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/chuyen-trang-thai/",
+        views.CaseTransitionView.as_view(),
+        name="case_transition",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/duyet-mau-4/",
+        views.CaseReviewView.as_view(),
+        name="case_review",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/ghi-chu/them/",
+        views.CaseNoteCreateView.as_view(),
+        name="note_create",
+    ),
+    path(
+        "ho-so/<uuid:case_id>/bo-sung/<int:pk>/da-bo-sung/",
+        views.SupplementResolveView.as_view(),
+        name="supplement_resolve",
+    ),
 ]
