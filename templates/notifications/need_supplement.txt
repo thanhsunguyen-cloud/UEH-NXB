@@ -1,0 +1,14 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+NXB Kinh tế TP.HCM đã xem hồ sơ và đề nghị Quý khách bổ sung thêm thông tin, tài liệu.{% if note %}
+
+Nội dung yêu cầu bổ sung:
+{{ note }}{% endif %}
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+Vui lòng đăng nhập Portal để bổ sung và nộp lại hồ sơ.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}

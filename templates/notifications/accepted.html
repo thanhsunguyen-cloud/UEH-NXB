@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Kính gửi {{ recipient_name }},</p>
+<p>NXB Kinh tế TP.HCM đã tiếp nhận hồ sơ của Quý khách.</p>
+<ul>
+  <li>Tên sách: {{ title }}</li>
+  <li>Mã hồ sơ: {{ display_code }}</li>
+  <li>Mã NXB: {{ nxb_code }}</li>
+  <li>Trạng thái hiện tại: {{ status_label }}</li>
+</ul>
+<p>NXB sẽ phân công biên tập viên và thông báo khi có bước tiếp theo.</p>
+<p><a href="{{ case_url }}">Mở hồ sơ trên Portal</a></p>
+{% include "notifications/_footer.html" %}
+</body>
+</html>

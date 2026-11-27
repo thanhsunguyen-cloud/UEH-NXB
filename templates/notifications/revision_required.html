@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Kính gửi {{ recipient_name }},</p>
+<p>Bản thảo của Quý khách cần được chỉnh sửa trước khi NXB tiếp tục biên tập.</p>{% if note %}
+<p><strong>Nội dung cần chỉnh sửa:</strong></p>
+<p>{{ note|linebreaksbr }}</p>{% endif %}
+<ul>
+  <li>Tên sách: {{ title }}</li>
+  <li>Mã hồ sơ: {{ display_code }}</li>
+  <li>Trạng thái hiện tại: {{ status_label }}</li>
+</ul>
+<p>Vui lòng đăng nhập Portal để tải lên bản thảo đã chỉnh sửa.</p>
+<p><a href="{{ case_url }}">Mở hồ sơ trên Portal</a></p>
+{% include "notifications/_footer.html" %}
+</body>
+</html>

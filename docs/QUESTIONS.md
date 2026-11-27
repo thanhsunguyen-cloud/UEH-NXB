@@ -94,6 +94,17 @@ Các điểm dưới đây **chưa được Owner chốt**. Mã hiện tạm là
 
 ---
 
+# M4 – THÔNG BÁO EMAIL (AI-5, nhánh `m4-notifications`): ĐIỂM CHƯA RÕ ĐÃ TỰ CHỌN PHƯƠNG ÁN ĐƠN GIẢN NHẤT
+
+| # | Câu hỏi | Đang làm tạm | Phương án khác |
+|---|---|---|---|
+| N1 | BTV phụ trách chính **có** nhưng bị khóa hoặc không có email thì gửi cho ai? | Coi như "chưa có" → gửi cho mọi EDITOR đang hoạt động (để hồ sơ không bị bỏ sót). Nếu BTV phụ trách chính là người thao tác thì không gửi cho ai. | Không gửi cho ai. |
+| N2 | Thông tin liên hệ cuối email | Để `[CẦN NXB CUNG CẤP]` đúng như gói M4, dù `docs/M6_NOI_DUNG_CAN_BO_SUNG.md` đã có email `nxbkt@ueh.edu.vn`. | Điền `nxbkt@ueh.edu.vn`. |
+| N3 | Nhãn trạng thái dễ hiểu | Bảng `FRIENDLY_STATUS_LABELS` riêng trong `apps/notifications/emails.py` (ví dụ `EDITING` → "NXB đang biên tập"); dùng chung cho cả email BTV. Khi M2 có bảng nhãn chung thì nên gộp về một chỗ. | Dùng nhãn `get_status_display()` của M0. |
+| N4 | `AuditEvent` `email.sent` / `email.failed` ghi `actor` là ai? | `actor = None` (hệ thống gửi), gắn `case`; `data` chỉ gồm loại email, người nhận, mã hồ sơ (sent) hoặc lỗi rút gọn ≤ 200 ký tự (failed). | Ghi `actor` = người đổi trạng thái. |
+| N5 | Ghi chú `note` khi chuyển trạng thái có thể là nội dung nội bộ không? | Chỉ đưa `note` vào email ở `NEED_SUPPLEMENT`, `REVISION_REQUIRED`, `REJECTED` (đúng gói); không bao giờ đọc `CaseNote`. Màn hình M3 cần nhắc BTV rằng ghi chú ở 3 thao tác này sẽ gửi cho khách hàng. | – |
+| N6 | Test đặt ở đâu, đo phủ thế nào? | `tests/test_notifications.py` (đúng gói); CI đã chạy `--cov=apps`, `apps/notifications` đạt 100%. | – |
+
 # DEMO M2/M3 (AI-4) – ĐIỂM CHƯA RÕ VÀ PHƯƠNG ÁN ĐÃ CHỌN
 
 Theo chỉ đạo của Owner: ghi lại, chọn phương án đơn giản nhất, không dừng lại hỏi. Owner có thể đổi khi rà soát PR.

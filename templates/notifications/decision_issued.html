@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Kính gửi {{ recipient_name }},</p>
+<p>NXB Kinh tế TP.HCM đã ban hành quyết định xuất bản cho tác phẩm của Quý khách.</p>
+<ul>
+  <li>Tên sách: {{ title }}</li>
+  <li>Mã hồ sơ: {{ display_code }}</li>
+  <li>Trạng thái hiện tại: {{ status_label }}</li>
+</ul>
+<p>Quý khách có thể xem thông tin chi tiết trên Portal.</p>
+<p><a href="{{ case_url }}">Mở hồ sơ trên Portal</a></p>
+{% include "notifications/_footer.html" %}
+</body>
+</html>

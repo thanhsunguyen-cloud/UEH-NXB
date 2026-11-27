@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "apps.finance.apps.FinanceConfig",
     "apps.public_site.apps.PublicSiteConfig",
     "apps.administration.apps.AdministrationConfig",
+    "apps.notifications.apps.NotificationsConfig",
     "apps.demo",
 ]
 

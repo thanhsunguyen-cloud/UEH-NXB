@@ -1,0 +1,11 @@
+{% autoescape off %}Kính gửi {{ recipient_name }},
+
+Bản thảo của Quý khách đã được duyệt.
+
+Tên sách: {{ title }}
+Mã hồ sơ: {{ display_code }}
+Trạng thái hiện tại: {{ status_label }}
+
+NXB sẽ tiếp tục thủ tục đăng ký xuất bản và thông báo khi hoàn thành.
+Mở hồ sơ: {{ case_url }}
+{% include "notifications/_footer.txt" %}{% endautoescape %}
