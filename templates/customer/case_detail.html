@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load customer_tags %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+  <div>
+    <a href="{% url 'customer:home' %}" class="small text-decoration-none">&larr; Hồ sơ của tôi</a>
+    <h1 class="h4 fw-bold mb-1">{{ case.title }}</h1>
+    <div class="small text-muted">Mã hồ sơ: <strong>{{ case.display_code }}</strong> · {% include "customer/_status_badge.html" with status=case.status %}</div>
+  </div>
+</div>
+
+{# 5. Yêu cầu bổ sung đang mở — hiện nổi bật đầu trang #}
+{% if open_supplements %}
+<div class="alert alert-warning" id="yeu-cau-bo-sung">
+  <h2 class="h6 fw-bold">NXB yêu cầu bổ sung hồ sơ</h2>
+  <ul class="mb-1">
+    {% for req in open_supplements %}
+      <li><span class="small text-muted">{{ req.created_at|date:"d/m/Y H:i" }}:</span> {{ req.message|linebreaksbr }}</li>
+    {% endfor %}
+  </ul>
+  <div class="small">Sau khi bổ sung đầy đủ, bấm <strong>"Nộp hồ sơ"</strong> để gửi lại cho NXB.</div>
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-12 col-xl-8">
+
+    {# 1. Thông tin chung #}
+    <section class="bg-white border rounded p-3 mb-3" id="thong-tin">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 fw-bold mb-0">Thông tin chung</h2>
+        {% if can_edit %}<a href="{% url 'customer:case_edit' case.id %}" class="btn btn-sm btn-outline-primary">Sửa</a>{% endif %}
+      </div>
+      <dl class="row mb-0 small">
+        <dt class="col-sm-4">Tên tác phẩm</dt><dd class="col-sm-8">{{ case.title }}</dd>
+        {% if case.subtitle %}<dt class="col-sm-4">Phụ đề</dt><dd class="col-sm-8">{{ case.subtitle }}</dd>{% endif %}
+        <dt class="col-sm-4">Thể loại</dt><dd class="col-sm-8">{{ case.category|default:"—" }}</dd>
+        <dt class="col-sm-4">Lĩnh vực</dt><dd class="col-sm-8">{{ case.field|default:"—" }}</dd>
+        <dt class="col-sm-4">Ngôn ngữ</dt><dd class="col-sm-8">{{ case.language }}{% if case.translated_from %} (dịch từ {{ case.translated_from }}){% endif %}</dd>
+        <dt class="col-sm-4">Lần xuất bản</dt><dd class="col-sm-8">{{ case.edition_number }}{% if case.is_reprint %} · Tái bản{% endif %}</dd>
+        <dt class="col-sm-4">Hình thức</dt><dd class="col-sm-8">{{ case.get_publication_mode_display }}{% if case.partner_name %} — {{ case.partner_name }}{% endif %}</dd>
+        <dt class="col-sm-4">Số trang / Khổ sách</dt><dd class="col-sm-8">{{ case.page_count|default:"—" }} / {{ case.book_size|default:"—" }}</dd>
+        {% if case.isbn %}<dt class="col-sm-4">ISBN</dt><dd class="col-sm-8">{{ case.isbn }}</dd>{% endif %}
+        <dt class="col-sm-4">Tóm tắt</dt><dd class="col-sm-8">{{ case.summary|default:"—"|linebreaksbr }}</dd>
+      </dl>
+    </section>
+
+    {# 2. Tác giả #}
+    <section class="bg-white border rounded p-3 mb-3" id="tac-gia">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h5 fw-bold mb-0">Tác giả</h2>
+        {% if can_edit %}<a href="{% url 'customer:contributor_add' case.id %}" class="btn btn-sm btn-outline-primary">+ Thêm tác giả</a>{% endif %}
+      </div>
+      <p class="small text-muted">Chỉ người đại diện có tài khoản; các tác giả khác là thông tin ghi trên sách.</p>
+      {% if contributors %}
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light"><tr><th>#</th><th>Họ tên</th><th>Vai trò</th><th class="d-none d-md-table-cell">Đơn vị</th>{% if can_edit %}<th></th>{% endif %}</tr></thead>
+          <tbody>
+          {% for c in contributors %}
+            <tr>
+              <td>{{ c.order }}</td>
+              <td>{% if c.academic_title %}{{ c.academic_title }} {% endif %}{{ c.full_name }}<div class="small text-muted d-md-none">{{ c.affiliation }}</div></td>
+              <td>{{ c.get_role_display }}</td>
+              <td class="d-none d-md-table-cell">{{ c.affiliation }}</td>
+              {% if can_edit %}
+              <td class="text-end text-nowrap">
+                <a href="{% url 'customer:contributor_edit' case.id c.id %}" class="btn btn-sm btn-link">Sửa</a>
+                <form method="post" action="{% url 'customer:contributor_remove' case.id c.id %}" class="d-inline" onsubmit="return confirm('Xóa tác giả này khỏi hồ sơ?');">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-link text-danger">Xóa</button>
+                </form>
+              </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p class="text-muted small mb-0">Chưa có tác giả.</p>
+      {% endif %}
+    </section>
+
+    {# 6. Bản thảo chỉnh sửa (REVISION_REQUIRED) #}
+    {% if show_revision_upload %}
+    <section class="bg-white border border-warning rounded p-3 mb-3" id="ban-thao-chinh-sua">
+      <h2 class="h5 fw-bold">Nộp bản thảo đã chỉnh sửa</h2>
+      <p class="small mb-2">Sau khi tải bản mới, NXB sẽ tiếp tục biên tập.</p>
+      {% include "partials/chunked_upload.html" with case=case doc_type="MANUSCRIPT" form_code="" label="Tải lên bản thảo đã chỉnh sửa" %}
+    </section>
+    {% endif %}
+
+    {# 3. Tài liệu #}
+    <section class="bg-white border rounded p-3 mb-3" id="tai-lieu">
+      <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+        <h2 class="h5 fw-bold mb-0">Tài liệu</h2>
+        <a href="{{ public_forms_url }}" class="small" target="_blank" rel="noopener">Tải biểu mẫu trống</a>
+      </div>
+      {% for group in document_groups %}
+        <div class="border-top pt-2 mt-2">
+          <div class="fw-semibold">{{ group.label }}</div>
+          {% if group.current %}
+            <div class="small">
+              Bản hiện hành: <a href="{% url 'core:document_download' group.current.id %}">{{ group.current.original_filename }}</a>
+              <span class="text-muted">(v{{ group.current.version }}, {{ group.current.uploaded_at|date:"d/m/Y H:i" }})</span>
+            </div>
+          {% else %}
+            <div class="small text-muted">Chưa có tài liệu.</div>
+          {% endif %}
+          {% if group.history %}
+            <details class="small mt-1">
+              <summary>Lịch sử phiên bản ({{ group.history|length }})</summary>
+              <ul class="mb-0">
+                {% for d in group.history %}
+                  <li><a href="{% url 'core:document_download' d.id %}">{{ d.original_filename }}</a> <span class="text-muted">(v{{ d.version }}, {{ d.uploaded_at|date:"d/m/Y H:i" }})</span></li>
+                {% endfor %}
+              </ul>
+            </details>
+          {% endif %}
+          {% if group.can_upload %}
+            <div class="mt-2">
+              {% include "partials/chunked_upload.html" with case=case doc_type=group.doc_type form_code="" label=group.upload_label %}
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </section>
+
+    {# 7. Trao đổi với NXB #}
+    <section class="bg-white border rounded p-3 mb-3" id="trao-doi">
+      <h2 class="h5 fw-bold">Trao đổi với NXB</h2>
+      {% for note in notes %}
+        <div class="border rounded p-2 mb-2 {% if note.author_id == user.id %}bg-light{% endif %}">
+          <div class="small text-muted">{% if note.author_id == user.id %}Bạn{% else %}NXB{% endif %} · {{ note.created_at|date:"d/m/Y H:i" }}</div>
+          <div>{{ note.body|linebreaksbr }}</div>
+        </div>
+      {% empty %}
+        <p class="small text-muted">Chưa có trao đổi.</p>
+      {% endfor %}
+      <form method="post" action="{% url 'customer:note_add' case.id %}" novalidate>
+        {% csrf_token %}
+        {% include "customer/_field.html" with field=note_form.body %}
+        <button type="submit" class="btn btn-sm btn-primary">Gửi</button>
+      </form>
+    </section>
+  </div>
+
+  <div class="col-12 col-xl-4">
+    {# 4. Điều kiện nộp hồ sơ #}
+    {% if show_checklist %}
+    <section class="bg-white border rounded p-3 mb-3" id="dieu-kien-nop">
+      <h2 class="h5 fw-bold">Điều kiện nộp hồ sơ</h2>
+      <ul class="list-unstyled small mb-3">
+        {% for item in checklist %}
+          <li class="{% if item.ok %}text-success{% else %}text-danger{% endif %}">{% if item.ok %}&#10003; Đã có{% else %}&#10007; Còn thiếu{% endif %}: {{ item.label }}</li>
+        {% endfor %}
+      </ul>
+      {% if can_submit %}
+        <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#submitModal">Nộp hồ sơ</button>
+        <div class="modal fade" id="submitModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <form method="post" action="{% url 'customer:case_submit' case.id %}" class="modal-content">
+              {% csrf_token %}
+              <div class="modal-header">
+                <h3 class="modal-title h5" id="submitModalLabel">Xác nhận nộp hồ sơ</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+              </div>
+              <div class="modal-body">
+                <p>Sau khi nộp, bạn sẽ không sửa được thông tin cho tới khi NXB yêu cầu bổ sung. Tiếp tục?</p>
+                <label class="form-label" for="submit-note">Lời nhắn cho NXB (không bắt buộc)</label>
+                <textarea name="note" id="submit-note" rows="3" class="form-control"></textarea>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-success">Nộp hồ sơ</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    {# 8. Dòng thời gian #}
+    <section class="bg-white border rounded p-3 mb-3" id="dong-thoi-gian">
+      <h2 class="h5 fw-bold">Dòng thời gian</h2>
+      <ul class="list-unstyled small mb-0">
+        <li class="mb-2"><span class="text-muted">{{ case.created_at|date:"d/m/Y H:i" }}</span> — Tạo hồ sơ</li>
+        {% for item in timeline %}
+          <li class="mb-2">
+            <span class="text-muted">{{ item.at|date:"d/m/Y H:i" }}</span> — {{ item.to_status|customer_status_label }}
+            {% if item.note %}<div class="text-body-secondary ps-2 border-start">{{ item.note|linebreaksbr }}</div>{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+  // Tải lên xong (sự kiện của partials/chunked_upload.html) -> tải lại trang để cập nhật danh sách tài liệu
+  document.addEventListener("ueh:upload-complete", function () {
+    setTimeout(function () { window.location.reload(); }, 600);
+  });
+</script>
+{% endblock %}
