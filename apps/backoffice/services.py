@@ -53,6 +53,14 @@ def transition_label(from_status: str, to_status: str) -> str:
     return str(label) if label else str(CaseStatus(to_status).label)
 
 
+# Ghi chú khi chuyển sang các trạng thái này được gửi cho khách (Portal + email M4).
+CUSTOMER_VISIBLE_NOTE_STATUSES = (
+    CaseStatus.NEED_SUPPLEMENT,
+    CaseStatus.REVISION_REQUIRED,
+    CaseStatus.REJECTED,
+)
+
+
 def transition_options(user, case: PublicationCase) -> list[dict]:
     """Danh sách nút chuyển trạng thái kèm các điều kiện còn thiếu (gọi validator của M0)."""
     options = []
@@ -67,6 +75,7 @@ def transition_options(user, case: PublicationCase) -> list[dict]:
                 "label": transition_label(case.status, to_status),
                 "missing": missing,
                 "needs_message": to_status == CaseStatus.NEED_SUPPLEMENT,
+                "to_customer": to_status in CUSTOMER_VISIBLE_NOTE_STATUSES,
                 "suggested": case.status == CaseStatus.EDITING and to_status == suggested,
                 "danger": to_status in (CaseStatus.REJECTED, CaseStatus.NEED_SUPPLEMENT),
             }

@@ -347,3 +347,16 @@ def test_transition_invalid_status_value(editor_client):
     case.refresh_from_db()
     assert case.status == CaseStatus.SUBMITTED
     assert messages_of(response)
+
+
+@pytest.mark.django_db
+def test_transition_note_warns_when_sent_to_customer():
+    from apps.backoffice.services import transition_options
+    from apps.core.models import CaseStatus
+    from tests.factories import PublicationCaseFactory, UserFactory
+
+    editor = UserFactory(role="EDITOR")
+    case = PublicationCaseFactory(status=CaseStatus.SUBMITTED)
+    opts = {o["to_status"]: o for o in transition_options(editor, case)}
+    assert opts[CaseStatus.NEED_SUPPLEMENT]["to_customer"] is True
+    assert opts[CaseStatus.ACCEPTED]["to_customer"] is False

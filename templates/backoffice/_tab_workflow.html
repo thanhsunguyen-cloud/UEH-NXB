@@ -30,6 +30,7 @@
               {% endif %}
               <label class="form-label small fw-semibold">{% if t.needs_message %}Nội dung yêu cầu bổ sung <span class="text-danger">*</span>{% else %}Ghi chú (không bắt buộc){% endif %}</label>
               <textarea name="note" rows="4" class="form-control" {% if t.needs_message %}required{% endif %}></textarea>
+              <div class="form-text {% if t.to_customer %}text-danger fw-semibold{% endif %}">{% if t.to_customer %}Nội dung này sẽ gửi cho khách hàng (hiện trên Portal và trong email).{% else %}Ghi chú nội bộ, khách hàng không thấy.{% endif %}</div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button>

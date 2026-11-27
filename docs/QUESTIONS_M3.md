@@ -24,3 +24,8 @@ Các điểm chưa rõ trong gói M3. Mỗi điểm đã chọn phương án đ�
 9. **Hồ sơ ADMIN/CUSTOMER:** mọi URL M3 trả 404 nhờ `EditorRequiredMixin` (kể cả khách hàng là chủ hồ sơ).
 
 10. **Môi trường thử:** `base.html` không gửi `X-CSRFToken` cho HTMX. Vì vậy M3 chỉ dùng HTMX cho GET (lọc, tìm, phân trang). Mọi thao tác ghi dùng form POST thường có `{% csrf_token %}`.
+
+## Quyết định của nhóm trưởng (Claude, 27/11/2026)
+- Q1: Có – M2 tự đánh dấu RESOLVED mọi yêu cầu OPEN khi khách nộp lại từ NEED_SUPPLEMENT, nên định nghĩa nhóm "Khách đã bổ sung" giữ nguyên.
+- Q2–Q10: chấp nhận phương án tạm.
+- Bổ sung (khớp M4): hộp thoại chuyển trạng thái sang NEED_SUPPLEMENT / REVISION_REQUIRED / REJECTED ghi rõ "Nội dung này sẽ gửi cho khách hàng"; các trạng thái khác ghi "Ghi chú nội bộ".
