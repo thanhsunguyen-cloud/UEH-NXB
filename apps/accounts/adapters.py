@@ -32,11 +32,53 @@ def get_home_url_for_user(user) -> str:
 logger = logging.getLogger(__name__)
 
 
+def mark_email_verified(user, email: str) -> None:
+    """Ghi nhận email của user là đã xác minh và là email chính."""
+    from allauth.account.models import EmailAddress
+
+    address, _created = EmailAddress.objects.get_or_create(
+        user=user, email__iexact=email, defaults={"email": email}
+    )
+    changed = []
+    if not address.verified:
+        address.verified = True
+        changed.append("verified")
+    if not address.primary and not EmailAddress.objects.filter(user=user, primary=True).exists():
+        address.primary = True
+        changed.append("primary")
+    if changed:
+        address.save(update_fields=changed)
+
+
+def _google_email_verified(sociallogin) -> bool:
+    data = getattr(sociallogin.account, "extra_data", None) or {}
+    value = data.get("email_verified", data.get("verified_email"))
+    return value is True or str(value).lower() == "true"
+
+
 class PortalAccountAdapter(DefaultAccountAdapter):
     """Điều hướng sau đăng nhập theo vai trò và chặn nhân sự đăng nhập bằng mật khẩu."""
 
     def get_login_redirect_url(self, request):
         return get_home_url_for_user(request.user)
+
+    def send_mail(self, template_prefix, email, context):
+        """Lỗi máy chủ email không được làm hỏng thao tác đăng ký/đăng nhập (lỗi 500)."""
+        try:
+            return super().send_mail(template_prefix, email, context)
+        except Exception:  # noqa: BLE001 - mọi lỗi SMTP
+            logger.exception("Gửi email %s thất bại", template_prefix)
+            from allauth.core import context as allauth_context
+
+            request = getattr(allauth_context, "request", None)
+            if request is not None:
+                messages.warning(
+                    request,
+                    _(
+                        "Hệ thống chưa gửi được email. Vui lòng thử lại sau hoặc liên hệ nxbkt@ueh.edu.vn."
+                    ),
+                )
+            return None
 
     def authenticate(self, request, **credentials):
         email = (credentials.get("email") or "").strip().lower()
@@ -89,6 +131,9 @@ class PortalSocialAccountAdapter(DefaultSocialAccountAdapter):
                     % {"domain": staff_domain},
                 )
                 raise ImmediateHttpResponse(redirect("accounts:login"))
+            if _google_email_verified(sociallogin):
+                # Google đã xác minh email: đánh dấu đã xác minh để allauth không gửi email xác nhận.
+                mark_email_verified(existing_user, email)
             sociallogin.connect(request, existing_user)
 
     def populate_user(self, request, sociallogin, data):
