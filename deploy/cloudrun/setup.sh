@@ -115,11 +115,16 @@ secret_exists DJANGO_SECRET_KEY || openssl rand -base64 48 | tr -d '\n' | put_se
 ok "Đã có DJANGO_SECRET_KEY"
 
 say "6/8 Email gửi thông báo (nxbkt@ueh.edu.vn)"
+APP_PASS=""
 if secret_exists EMAIL_URL; then
-  read -r -p "    Đã có cấu hình email. Nhập lại mật khẩu ứng dụng? (c/K): " again
+  read -r -s -p "    Đã có cấu hình email. Gõ c rồi Enter để nhập mật khẩu MỚI, hoặc chỉ bấm Enter để giữ: " again; echo
+  # Người dùng dán thẳng mật khẩu vào câu hỏi này: coi đó là mật khẩu mới.
+  if [ "${#again}" -ge 12 ]; then APP_PASS="$again"; again="c"; fi
 else again="c"; fi
 if [ "${again,,}" = "c" ]; then
-  read -r -s -p "    Dán mật khẩu ứng dụng 16 ký tự của nxbkt@ueh.edu.vn (Enter để tạm tắt email): " APP_PASS; echo
+  if [ -z "$APP_PASS" ]; then
+    read -r -s -p "    Dán mật khẩu ứng dụng 16 ký tự của nxbkt@ueh.edu.vn (chữ sẽ không hiện; Enter để tạm tắt email): " APP_PASS; echo
+  fi
   if [ -n "$APP_PASS" ]; then
     APP_PASS="${APP_PASS// /}"
     printf 'smtp+tls://nxbkt%%40ueh.edu.vn:%s@smtp.gmail.com:587' "$APP_PASS" | put_secret EMAIL_URL
@@ -133,11 +138,13 @@ fi
 
 say "7/8 Đăng nhập Google và Google Drive"
 if [ -n "$GOOGLE_OAUTH_CLIENT_ID" ]; then
-  if secret_exists GOOGLE_OAUTH_CLIENT_SECRET; then
-    read -r -p "    Đã có Client secret. Nhập lại? (c/K): " again
+  CS=""
+  if secret_exists GOOGLE_OAUTH_CLIENT_SECRET && [ "$(gcloud secrets versions access latest --secret GOOGLE_OAUTH_CLIENT_SECRET)" != "chua-cau-hinh" ]; then
+    read -r -s -p "    Đã có Client secret. Gõ c rồi Enter để nhập MỚI, hoặc chỉ bấm Enter để giữ: " again; echo
+    if [ "${#again}" -ge 12 ]; then CS="$again"; again="c"; fi
   else again="c"; fi
   if [ "${again,,}" = "c" ]; then
-    read -r -s -p "    Dán Client secret đăng nhập Google: " CS; echo
+    [ -z "$CS" ] && { read -r -s -p "    Dán Client secret đăng nhập Google (chữ sẽ không hiện): " CS; echo; }
     [ -n "$CS" ] && printf '%s' "$CS" | put_secret GOOGLE_OAUTH_CLIENT_SECRET
     unset CS
   fi
@@ -166,7 +173,7 @@ else
 fi
 ADMIN_VAR="BOOTSTRAP_ADMIN_EMAILS=${ADMIN_EMAILS}"
 cd "$(dirname "$0")/../.."
-gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$RUN_SA" \
+gcloud run deploy "$SERVICE" --source . --quiet --region "$REGION" --service-account "$RUN_SA" \
   --add-cloudsql-instances "$CONN_NAME" --allow-unauthenticated \
   --memory 1Gi --cpu 1 --min-instances 0 --max-instances 2 --timeout 300 \
   --set-env-vars "^|^${ENV_VARS//,/|}|${ADMIN_VAR}" --set-secrets "$SECRETS"
