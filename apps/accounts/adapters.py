@@ -51,7 +51,8 @@ def mark_email_verified(user, email: str) -> None:
 
 
 def _google_email_verified(sociallogin) -> bool:
-    data = getattr(sociallogin.account, "extra_data", None) or {}
+    account = getattr(sociallogin, "account", None)
+    data = getattr(account, "extra_data", None) or {}
     value = data.get("email_verified", data.get("verified_email"))
     return value is True or str(value).lower() == "true"
 
